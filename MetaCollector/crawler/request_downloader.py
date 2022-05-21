@@ -36,3 +36,4 @@ class RequestDownloader(object):
     def __download(self, down_dict: tuple):
         data = self.hm.send_request(url=down_dict[0], timeout=self.timeout)
         self.hm.download_file(data.content, down_dict[1])
+        self.progress.update(1)

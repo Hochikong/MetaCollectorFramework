@@ -3,6 +3,8 @@ import subprocess
 
 import psutil
 
+from MetaCollector.base.utils.ind_logger.report import beauty_dict_report
+from MetaCollector.base.utils.selenium.factory import yaml_loader
 from MetaCollector.crawler.agent import CollectAgent
 
 
@@ -14,38 +16,38 @@ def cli_launch():
     # noVNC forward process
     proc = None
 
-    worker = CollectAgent()
+    agent = CollectAgent()
     print("加载配置文件中...")
     if args.notify:
-        worker.load_cfg_from_files(args.cfg, args.notify, args.debug)
+        agent.load_cfg_from_files(args.cfg, args.notify, args.debug)
     else:
-        worker.load_cfg_from_files(args.cfg, debug_mode=args.debug)
+        agent.load_cfg_from_files(args.cfg, debug_mode=args.debug)
 
     if args.all_notify:
-        worker.enable_all_notify()
+        agent.enable_all_notify()
 
     xvfb_launch = False
     if args.xdisplay:
         # 启动vnc转发服务的两种途径
-        if worker.yaml_cfg['selenium'].get('forward_port', -1) != -1:
-            if worker.yaml_cfg['selenium'].get('xdisplay_backend', '') == 'xvnc':
-                source_port = worker.yaml_cfg['selenium']['xdisplay_port']
+        if agent.yaml_cfg['selenium'].get('forward_port', -1) != -1:
+            if agent.yaml_cfg['selenium'].get('xdisplay_backend', '') == 'xvnc':
+                source_port = agent.yaml_cfg['selenium']['xdisplay_port']
                 proc = subprocess.Popen(
-                    f"novnc --listen {int(worker.yaml_cfg['selenium'].get('forward_port'))} --vnc localhost:{source_port}",
+                    f"novnc --listen {int(agent.yaml_cfg['selenium'].get('forward_port'))} --vnc localhost:{source_port}",
                     shell=True)
-            xvfb_launch = worker.enable_xvfb()
+            xvfb_launch = agent.enable_xvfb()
 
         elif args.forward:
-            if worker.yaml_cfg['selenium'].get('xdisplay_backend', '') == 'xvnc':
-                source_port = worker.yaml_cfg['selenium']['xdisplay_port']
+            if agent.yaml_cfg['selenium'].get('xdisplay_backend', '') == 'xvnc':
+                source_port = agent.yaml_cfg['selenium']['xdisplay_port']
                 target_port = int(args.forward)
                 proc = subprocess.Popen(f"novnc --listen {target_port} --vnc localhost:{source_port}", shell=True)
-            xvfb_launch = worker.enable_xvfb()
+            xvfb_launch = agent.enable_xvfb()
         else:
-            xvfb_launch = worker.enable_xvfb()
+            xvfb_launch = agent.enable_xvfb()
 
     print("启动chrome")
-    worker.launch_for_drivers()
+    agent.launch_for_drivers()
 
     if args.free:
         print("Enter '/h' to get more information")
@@ -53,7 +55,7 @@ def cli_launch():
             iv = input("MCFDataCollector|FreeMode#>")
             if iv == '/q':
                 if xvfb_launch:
-                    worker.stop_xvfb()
+                    agent.stop_xvfb()
 
                     if proc is not None:
                         pid = proc.pid
@@ -63,79 +65,60 @@ def cli_launch():
                         proc.terminate()
                 break
             elif iv == '/sc':
-                worker.hosted_instance.brow.get("https://nowsecure.nl")
+                agent.hosted_instance.brow.get("https://nowsecure.nl")
             elif iv == '/h':
                 print("""
                 /q - quit
                 /h - help
                 /sc - safe check
-                /r_run - should login first. range run modules with continue mode, command example: r_run:xxx
-                /run - should login first. run modules with continue mode on latest day, command example: run:xxx
                 /login - just login
                 /ls - list all drivers
-                /get - goto url, example: /get-https://xxx.com
+                /get - goto url, example: /get;https://xxx.com
+                /run - run driver, example: /run;NAMESPACE:DRIVER
                 """)
             elif iv == '/ls':
                 print("")
             elif iv.startswith('/get'):
-                worker.hosted_instance.brow.get(iv.replace("/get-", "").strip())
-            # elif iv.startswith('/r_run'):
-            #     command_split = iv.split(":")[-1]
-            #     run_modules = [i.strip() for i in command_split.split(",")]
-            #
-            #     run_results = {}
-            #
-            #     for d in run_modules:
-            #         worker.load_driver(d)
-            #         worker.set_continue_mode_for_driver(True)
-            #         print(f"驱动{d}已加载完毕")
-            #         print("运行驱动：{}".format(d))
-            #         r = worker.run_extension(d, worker.hosted_instance, 'f', args.cfg, auto_exit=False, range=True,
-            #                                  email_cfg=worker.email_cfg)
-            #         sleep(10)
-            #         run_results[d] = (r, worker.plugin_run_desc)
-            #
-            #     worker.em.update_subject("r_run已执行全部模块")
-            #     worker.em.quick_send(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
-            # elif iv.startswith('/run'):
-            #     command_split = iv.split(":")[-1]
-            #     run_modules = [i.strip() for i in command_split.split(",")]
-            #
-            #     run_results = {}
-            #
-            #     for d in run_modules:
-            #         worker.load_driver(d)
-            #         worker.set_continue_mode_for_driver(True)
-            #         print(f"驱动{d}已加载完毕")
-            #         print("运行驱动：{}".format(d))
-            #         r = worker.run_extension(d, worker.hosted_instance, 'f', args.cfg, auto_exit=False, range=False,
-            #                                  email_cfg=worker.email_cfg)
-            #         sleep(10)
-            #         run_results[d] = (r, worker.plugin_run_desc)
-            #
-            #     worker.em.update_subject("run已执行全部模块")
-            #     worker.em.quick_send(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
+                agent.hosted_instance.brow.get(iv.replace("/get;", "").strip())
+            elif iv.startswith('/run'):
+                ns_dr = iv.split(";")[-1]
+                ns = ns_dr.split(":")[0]
+                dr = ns_dr.split(":")[1]
+
+                run_results = {}
+
+                agent.load_driver(ns, dr)
+                print(f"驱动{dr}已加载完毕")
+                print("运行驱动：{}".format(dr))
+                r = agent.run_extension(dr, agent.hosted_instance, yaml_loader(args.cfg), auto_exit=False, range=False)
+                run_results[dr] = (r, agent.plugin_run_desc)
+
+                if agent.em:
+                    agent.em.update_subject("run已执行全部模块")
+                    agent.em.quick_send(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
+                else:
+                    print("run已执行全部模块")
+                    print(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
             else:
                 print("不被支持的指令")
 
     else:
         if args.debug != 'yes':
-            worker.hosted_instance.brow.set_window_size(2560, 1080)
+            agent.hosted_instance.brow.set_window_size(2560, 1080)
 
         print("加载驱动中")
-        worker.load_driver(args.driver)
+        agent.load_driver(args.driver, args.driver)
 
         print("运行驱动：{}".format(args.driver))
 
+        cfg_d = agent.yaml_cfg
         if args.range:
-            worker.run_extension(args.driver, worker.hosted_instance, 'f', args.cfg, auto_exit=True, range=True,
-                                 email_cfg=worker.email_cfg)
+            agent.run_extension(args.driver, agent.hosted_instance, cfg_d, auto_exit=False, range=True)
         else:
-            worker.run_extension(args.driver, worker.hosted_instance, 'f', args.cfg, auto_exit=True, range=False,
-                                 email_cfg=worker.email_cfg)
+            agent.run_extension(args.driver, agent.hosted_instance, cfg_d, auto_exit=False, range=False)
 
         if xvfb_launch:
-            worker.stop_xvfb()
+            agent.stop_xvfb()
 
     if proc is not None:
         proc.terminate()

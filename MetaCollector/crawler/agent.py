@@ -9,7 +9,7 @@ import traceback
 from time import sleep
 
 import psutil
-from stevedore import extension
+from stevedore import driver
 
 from MetaCollector.base.utils.ind_logger.notify import EmailNotifierWrapper
 from MetaCollector.base.utils.selenium.factory import DriverManagerMock
@@ -224,10 +224,11 @@ class CollectAgent(object):
     def launch_for_drivers(self):
         self.get_instance()
 
-    def load_driver(self, namespace: str) -> bool:
-        self.driver_mgr = extension.ExtensionManager(
+    def load_driver(self, namespace: str, name: str) -> bool:
+        self.driver_mgr = driver.DriverManager(
             namespace=namespace,
-            # invoke_on_load=True
+            name=name,
+            invoke_on_load=True
         )
         return True
 
@@ -264,15 +265,13 @@ class CollectAgent(object):
     def get_worker_noted(self) -> str:
         return self.hosted_instance.worker_noted
 
-    def run_extension(self, name: str, instance: MCFDataCollector,
-                      cfg_type: str, cfg_input: any,
+    def run_extension(self, name: str, instance: MCFDataCollector, cfg_input: any,
                       auto_exit: bool = True, **kwargs) -> bool:
         """
         运行插件
 
         :param name: 插件名
         :param instance: MCFDataCollector的实例
-        :param cfg_type: 配置文件的类别，若为f，则表示为文件，若为d，则表示为字典
         :param cfg_input: 配置文件的具体内容
         :param auto_exit: 在插件运行完/报错后是否自动退出，释放资源和关闭浏览器
         :param kwargs: 插件的附加参数
@@ -294,16 +293,8 @@ class CollectAgent(object):
                 notify_object = "{}取数".format(self.driver_mgr.driver.get_name())
 
             try:
-                if cfg_type == 'f':
-                    if isinstance(cfg_input, str):
-                        r0 = self.driver_mgr.driver.prepare(instance, cfg_input, **kwargs)
-                    else:
-                        raise RuntimeError("输入内容不正确，无法prepare")
-                elif cfg_type == 'd':
-                    if isinstance(cfg_input, dict):
-                        r0 = self.driver_mgr.driver.prepare_d(instance, cfg_input, **kwargs)
-                    else:
-                        raise RuntimeError("输入内容不正确，无法prepare")
+                if isinstance(cfg_input, dict):
+                    r0 = self.driver_mgr.driver.prepare(instance, cfg_input, **kwargs)
                 else:
                     raise RuntimeError("输入内容不正确，无法prepare")
 
@@ -315,27 +306,27 @@ class CollectAgent(object):
 
                     if kwargs.get("range"):
                         if self.driver_mgr.driver.cfg.get('range', {}).get('monthly', False):
-                            desc = "MCF-driver:{}-range_mode_months:{}->{}-sid:{}".format(name,
-                                                                                          kwargs.get('range'),
-                                                                                          [self.driver_mgr.driver.cfg[
-                                                                                               'range']['months'][0],
-                                                                                           self.driver_mgr.driver.cfg[
-                                                                                               'range']['months'][-1]],
-                                                                                          self.driver_mgr.driver.shop_id)
-                        else:
-                            desc = "MCF-driver:{}-range_mode:{}->{}-sid:{}".format(name,
+                            desc = "MCF-driver:{}-range_mode_months:{}->{}".format(name,
                                                                                    kwargs.get('range'),
                                                                                    [self.driver_mgr.driver.cfg[
-                                                                                        'range']['head'],
+                                                                                        'range']['months'][0],
                                                                                     self.driver_mgr.driver.cfg[
-                                                                                        'range']['tail']],
-                                                                                   self.driver_mgr.driver.shop_id)
+                                                                                        'range']['months'][-1]],
+                                                                                   )
+                        else:
+                            desc = "MCF-driver:{}-range_mode:{}->{}".format(name,
+                                                                            kwargs.get('range'),
+                                                                            [self.driver_mgr.driver.cfg[
+                                                                                 'range']['head'],
+                                                                             self.driver_mgr.driver.cfg[
+                                                                                 'range']['tail']],
+                                                                            )
                     else:
                         # 日常取数模式，只取最新一日
-                        desc = "MCF-driver:{}-range_mode:{}->{}-sid:{}".format(name,
-                                                                               kwargs.get('range'),
-                                                                               "latest date",
-                                                                               self.driver_mgr.driver.shop_id)
+                        desc = "MCF-driver:{}-range_mode:{}->{}".format(name,
+                                                                        kwargs.get('range'),
+                                                                        "latest date",
+                                                                        )
 
                     self.plugin_run_desc = desc
 
