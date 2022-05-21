@@ -1,0 +1,46 @@
+selenium:
+  #  enable_wire: true
+  enable_uc: true
+  xdisplay_backend: xvnc
+  xdisplay_port: 5905
+  forward_port: 6801
+  driver_path: D:\selenium_workspace\chromedriver.exe
+  stealth_path: D:\selenium_workspace\stealth.min.js
+  version: 101
+
+  addition_arguments:
+    - --user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36
+    - --disable-blink-features=AutomationControlled
+    - --log-level=3
+    - --user-data-dir=D:\selenium_workspace\ud
+
+  prefs:
+    download.default_directory: C:\Users\Deckard He\Downloads
+
+log:
+  logfile_prefix: D:\selenium_workspace\logs\mcf
+  screenshots: D:\selenium_workspace\sc
+
+account:
+  username: ACCOUNT
+  password: PASSWORD
+
+db:
+  data_url: mysql+mysqldb://USER:PWD@URL/DB?charset=utf8mb4
+
+# 当提供range参数时读取
+range:
+  # 月度
+  monthly: false
+  months:
+    - 2021-01-01 ~ 2021-01-31
+
+  weekly: false
+  # 提供该周的任意一天即可
+  weeks:
+    - 2021-09-09
+
+  # 日度
+  head: 2022-04-16
+  tail: 2022-04-16
+  enable_safe_check: false
