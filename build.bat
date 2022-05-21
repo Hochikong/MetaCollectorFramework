@@ -1,5 +1,5 @@
 @echo off
-pip uninstall cpir -y
+pip uninstall MCF -y
 python setup.py bdist_wheel
 cd dist/
 pip install MCF-1.0.0-py3-none-any.whl

@@ -73,9 +73,12 @@ def cli_launch():
                 /run - should login first. run modules with continue mode on latest day, command example: run:xxx
                 /login - just login
                 /ls - list all drivers
+                /get - goto url, example: /get-https://xxx.com
                 """)
             elif iv == '/ls':
                 print("")
+            elif iv.startswith('/get'):
+                worker.hosted_instance.brow.get(iv.replace("/get-", "").strip())
             # elif iv.startswith('/r_run'):
             #     command_split = iv.split(":")[-1]
             #     run_modules = [i.strip() for i in command_split.split(",")]
@@ -112,8 +115,8 @@ def cli_launch():
             #
             #     worker.em.update_subject("run已执行全部模块")
             #     worker.em.quick_send(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
-            # else:
-            #     print("不被支持的指令")
+            else:
+                print("不被支持的指令")
 
     else:
         if args.debug != 'yes':

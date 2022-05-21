@@ -1,5 +1,5 @@
 #!/bin/bash
-pip38 uninstall cpir -y
+pip38 uninstall MCF -y
 python38 setup.py bdist_wheel
 # shellcheck disable=SC2164
 cd dist/
