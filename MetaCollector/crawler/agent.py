@@ -21,7 +21,6 @@ from MetaCollector.crawler.Main import MCFDataCollector
 class CollectAgent(object):
     def __init__(self):
         self.cfg_path = None
-        self.email_file_path = None
         self.yaml_cfg = None
 
         # selenium
@@ -31,6 +30,7 @@ class CollectAgent(object):
         self.prefs = None
 
         # email
+        self.email_file_path = None
         self.email_cfg = None
         # notify
         self.em: EmailNotifierWrapper = None
@@ -143,7 +143,8 @@ class CollectAgent(object):
     def __cfg_interceptor(self, cfg_type: str = None):
         if cfg_type == 'file':
             self.yaml_cfg: dict = yaml_loader(self.cfg_path, encoding='utf-8')
-            self.email_cfg = yaml_loader(self.email_file_path, 'utf-8')['email']
+            if self.email_file_path:
+                self.email_cfg = yaml_loader(self.email_file_path, 'utf-8')['email']
 
         self.driver_path = self.yaml_cfg['selenium']['driver_path']
         self.addition_args = self.yaml_cfg['selenium']['addition_arguments']
@@ -159,16 +160,18 @@ class CollectAgent(object):
         self.xvfb_backend = self.yaml_cfg['selenium'].get('xdisplay_backend', 'xvfb')
         self.xvfb_port = self.yaml_cfg['selenium'].get('xdisplay_port', 'xvfb')
 
-    def load_cfg_from_files(self, cfg: str, notify: str, debug_mode: str = 'no'):
+    def load_cfg_from_files(self, cfg: str, notify: str = None, debug_mode: str = 'no'):
         self.cfg_path = cfg
-        self.email_file_path = notify
+        if notify:
+            self.email_file_path = notify
         self.debug_or_not = debug_mode
         self.__cfg_interceptor('file')
 
-    def load_cfg_from_dict(self, cfg_dict: dict, notify_dict: dict, debug_mode: str = 'no'):
+    def load_cfg_from_dict(self, cfg_dict: dict, notify_dict: dict = None, debug_mode: str = 'no'):
         self.debug_or_not = debug_mode
         self.yaml_cfg: dict = cfg_dict
-        self.email_cfg = notify_dict['email']
+        if notify_dict:
+            self.email_cfg = notify_dict['email']
         self.__cfg_interceptor()
 
     def get_instance(self):
@@ -276,16 +279,20 @@ class CollectAgent(object):
         :param kwargs: 插件的附加参数
         :return:
         """
+        notify_object = ''
         if self.driver_mgr is None:
             raise RuntimeError("尚未加载任何驱动，无法取数")
         else:
 
-            self.em = EmailNotifierWrapper(self.email_cfg['host'],
-                                           self.email_cfg['username'],
-                                           self.email_cfg['password'],
-                                           self.email_cfg['from_'],
-                                           "{}取数".format(self.driver_mgr.driver.get_name()),
-                                           self.email_cfg['to'])
+            if self.email_cfg:
+                self.em = EmailNotifierWrapper(self.email_cfg['host'],
+                                               self.email_cfg['username'],
+                                               self.email_cfg['password'],
+                                               self.email_cfg['from_'],
+                                               "{}取数".format(self.driver_mgr.driver.get_name()),
+                                               self.email_cfg['to'])
+            else:
+                notify_object = "{}取数".format(self.driver_mgr.driver.get_name())
 
             try:
                 if cfg_type == 'f':
@@ -348,16 +355,24 @@ class CollectAgent(object):
                 # 仅通知，不退出
                 if not auto_exit:
                     if not self.disable_unnecessary_notify:
-                        old_subj = self.em.get_subject()
-                        self.em.update_subject("成功-{}".format(old_subj))
-                        self.em.quick_send("{}\n取数完毕，请检查".format(desc))
+                        if self.em:
+                            old_subj = self.em.get_subject()
+                            self.em.update_subject("成功-{}".format(old_subj))
+                            self.em.quick_send("{}\n取数完毕，请检查".format(desc))
+                        else:
+                            print("成功-{}".format(notify_object))
+                            print("{}\n取数完毕，请检查".format(desc))
                     return True
 
                 instance.dispose("取数完毕，程序关闭中")
                 if not self.disable_unnecessary_notify:
-                    old_subj = self.em.get_subject()
-                    self.em.update_subject("成功-{old_subj}")
-                    self.em.quick_send("{}\n取数完毕，请检查".format(desc))
+                    if self.em:
+                        old_subj = self.em.get_subject()
+                        self.em.update_subject(f"成功-{old_subj}")
+                        self.em.quick_send("{}\n取数完毕，请检查".format(desc))
+                    else:
+                        print(f"成功-{notify_object}")
+                        print("{}\n取数完毕，请检查".format(desc))
                 return True
 
             except Exception as e:
@@ -371,13 +386,22 @@ class CollectAgent(object):
 
                 # 仅通知，不退出
                 if not auto_exit:
-                    old_subj = self.em.get_subject()
-                    self.em.update_subject(f"失败-{old_subj}")
-                    self.em.quick_send("取数崩溃：{}\n{}".format(e, traceback.format_exc()))
+                    if self.em:
+                        old_subj = self.em.get_subject()
+                        self.em.update_subject(f"失败-{old_subj}")
+                        self.em.quick_send("取数崩溃：{}\n{}".format(e, traceback.format_exc()))
+                    else:
+                        print(f"失败-{notify_object}")
+                        print("取数崩溃：{}\n{}".format(e, traceback.format_exc()))
+
                     return False
 
                 instance.dispose("程序崩溃，立即退出")
-                old_subj = self.em.get_subject()
-                self.em.update_subject(f"失败-{old_subj}")
-                self.em.quick_send("取数崩溃：{}\n{}".format(e, traceback.format_exc()))
+                if self.em:
+                    old_subj = self.em.get_subject()
+                    self.em.update_subject(f"失败-{old_subj}")
+                    self.em.quick_send("取数崩溃：{}\n{}".format(e, traceback.format_exc()))
+                else:
+                    print(f"失败-{notify_object}")
+                    print("取数崩溃：{}\n{}".format(e, traceback.format_exc()))
                 return False

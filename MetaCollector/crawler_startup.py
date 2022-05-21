@@ -1,10 +1,8 @@
 import argparse
 import subprocess
-from time import sleep
 
 import psutil
 
-from MetaCollector.base.utils.ind_logger.report import beauty_dict_report
 from MetaCollector.crawler.agent import CollectAgent
 
 
@@ -18,7 +16,10 @@ def cli_launch():
 
     worker = CollectAgent()
     print("加载配置文件中...")
-    worker.load_cfg_from_files(args.cfg, args.notify, args.debug)
+    if args.notify:
+        worker.load_cfg_from_files(args.cfg, args.notify, args.debug)
+    else:
+        worker.load_cfg_from_files(args.cfg, debug_mode=args.debug)
 
     if args.all_notify:
         worker.enable_all_notify()
@@ -75,44 +76,44 @@ def cli_launch():
                 """)
             elif iv == '/ls':
                 print("")
-            elif iv.startswith('/r_run'):
-                command_split = iv.split(":")[-1]
-                run_modules = [i.strip() for i in command_split.split(",")]
-
-                run_results = {}
-
-                for d in run_modules:
-                    worker.load_driver(d)
-                    worker.set_continue_mode_for_driver(True)
-                    print(f"驱动{d}已加载完毕")
-                    print("运行驱动：{}".format(d))
-                    r = worker.run_extension(d, worker.hosted_instance, 'f', args.cfg, auto_exit=False, range=True,
-                                             email_cfg=worker.email_cfg)
-                    sleep(10)
-                    run_results[d] = (r, worker.plugin_run_desc)
-
-                worker.em.update_subject("r_run已执行全部模块")
-                worker.em.quick_send(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
-            elif iv.startswith('/run'):
-                command_split = iv.split(":")[-1]
-                run_modules = [i.strip() for i in command_split.split(",")]
-
-                run_results = {}
-
-                for d in run_modules:
-                    worker.load_driver(d)
-                    worker.set_continue_mode_for_driver(True)
-                    print(f"驱动{d}已加载完毕")
-                    print("运行驱动：{}".format(d))
-                    r = worker.run_extension(d, worker.hosted_instance, 'f', args.cfg, auto_exit=False, range=False,
-                                             email_cfg=worker.email_cfg)
-                    sleep(10)
-                    run_results[d] = (r, worker.plugin_run_desc)
-
-                worker.em.update_subject("run已执行全部模块")
-                worker.em.quick_send(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
-            else:
-                print("不被支持的指令")
+            # elif iv.startswith('/r_run'):
+            #     command_split = iv.split(":")[-1]
+            #     run_modules = [i.strip() for i in command_split.split(",")]
+            #
+            #     run_results = {}
+            #
+            #     for d in run_modules:
+            #         worker.load_driver(d)
+            #         worker.set_continue_mode_for_driver(True)
+            #         print(f"驱动{d}已加载完毕")
+            #         print("运行驱动：{}".format(d))
+            #         r = worker.run_extension(d, worker.hosted_instance, 'f', args.cfg, auto_exit=False, range=True,
+            #                                  email_cfg=worker.email_cfg)
+            #         sleep(10)
+            #         run_results[d] = (r, worker.plugin_run_desc)
+            #
+            #     worker.em.update_subject("r_run已执行全部模块")
+            #     worker.em.quick_send(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
+            # elif iv.startswith('/run'):
+            #     command_split = iv.split(":")[-1]
+            #     run_modules = [i.strip() for i in command_split.split(",")]
+            #
+            #     run_results = {}
+            #
+            #     for d in run_modules:
+            #         worker.load_driver(d)
+            #         worker.set_continue_mode_for_driver(True)
+            #         print(f"驱动{d}已加载完毕")
+            #         print("运行驱动：{}".format(d))
+            #         r = worker.run_extension(d, worker.hosted_instance, 'f', args.cfg, auto_exit=False, range=False,
+            #                                  email_cfg=worker.email_cfg)
+            #         sleep(10)
+            #         run_results[d] = (r, worker.plugin_run_desc)
+            #
+            #     worker.em.update_subject("run已执行全部模块")
+            #     worker.em.quick_send(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
+            # else:
+            #     print("不被支持的指令")
 
     else:
         if args.debug != 'yes':
