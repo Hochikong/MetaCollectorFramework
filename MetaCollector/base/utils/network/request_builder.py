@@ -14,14 +14,13 @@ class HttpRequestsMaker:
         self.session = requests.session()
         if "proxies" in kwargs.keys():
             print("proxies:%s" % kwargs.get("proxies"))
-            self.session.proxies = kwargs.get("proxies")
+            px: dict = kwargs.get("proxies")
+            self.session.proxies = px
         if "headers" in kwargs.keys():
+            # just add cookie in headers['cookie']
             print("headers:%s" % kwargs.get("headers"))
-            self.session.headers.update(kwargs.get("headers"))
-        if "cookies" in kwargs.keys():
-            print("cookies:%s" % kwargs.get("cookies"))
-            print(type(kwargs.get("cookies")))
-            self.session.cookies = kwargs.get("cookies")
+            hd: dict = kwargs.get("headers")
+            self.session.headers.update(hd)
 
     def send_request(self, method='get', url='', timeout=60, headers=None, data=None, params=None):
         """

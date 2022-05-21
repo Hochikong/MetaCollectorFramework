@@ -9,7 +9,7 @@ import traceback
 from time import sleep
 
 import psutil
-from stevedore import driver
+from stevedore import extension
 
 from MetaCollector.base.utils.ind_logger.notify import EmailNotifierWrapper
 from MetaCollector.base.utils.selenium.factory import DriverManagerMock
@@ -224,11 +224,10 @@ class CollectAgent(object):
     def launch_for_drivers(self):
         self.get_instance()
 
-    def load_driver(self, namespace: str, name: str) -> bool:
-        self.driver_mgr = driver.DriverManager(
+    def load_driver(self, namespace: str) -> bool:
+        self.driver_mgr = extension.ExtensionManager(
             namespace=namespace,
-            name=name,
-            invoke_on_load=True
+            # invoke_on_load=True
         )
         return True
 

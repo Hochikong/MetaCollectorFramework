@@ -5,4 +5,4 @@ HEADER = {
     "User-Agent": UA
 }
 
-proxies = {"http": 'socks5://127.0.0.1:5082', 'https': 'socks5h://127.0.0.1:5082'}
+PROXIES = {"http": 'socks5://127.0.0.1:5082', 'https': 'socks5h://127.0.0.1:5082'}
