@@ -26,7 +26,8 @@ setup(
         'console_scripts': [
             'mcf_collect=MetaCollector.crawler_startup:cli_launch',
             'djs_scan=MetaScanner.DJS.main:scan_cli_launch',
-            'djs_import=MetaScanner.DJS.main:append_cli_launch'
+            'djs_import=MetaScanner.DJS.main:append_cli_launch',
+            'new_djs_db=MetaScanner.DJS.main:init_new_metadata_db'
 
         ],
     },

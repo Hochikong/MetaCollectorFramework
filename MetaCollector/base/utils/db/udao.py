@@ -1,3 +1,4 @@
+import traceback
 from typing import List
 
 from sqlalchemy import Table, MetaData
@@ -51,7 +52,7 @@ class UniversalDAO(object):
             self.session.commit()
             succeed = 1
         except Exception as e:
-            em = str(e)
+            em = f"{e}\n{traceback.format_exc()}"
             self.session.rollback()
             succeed = 0
         finally:

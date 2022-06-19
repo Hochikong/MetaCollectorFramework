@@ -24,6 +24,7 @@ class DJSScannerV2(object):
 
         meta_jsons = []
         for f in meta_files:
+            print(f"扫描元数据文件: {f}")
             with open(f, 'r', encoding='utf-8') as ft:
                 meta_jsons.append(json.load(ft))
 
@@ -31,7 +32,7 @@ class DJSScannerV2(object):
         associates = []
 
         for ind, d in enumerate(meta_jsons):
-            p = meta_files[ind].replace(f'{os.sep}metadata.txt', '')
+            p = meta_files[ind][:meta_files[ind].find('metadata')]
             print(f"Scanning path: {p}")
             main_data = {
                 'url': d['URL'],
@@ -150,7 +151,6 @@ class DJSScannerV2(object):
         dao.custom_import_raise('djs_associate', scanner_input['djs_associate'])
         return True
 
-
-if __name__ == '__main__':
-    scan_path = r"F:\manga"
-    url = r'sqlite:///C:\Users\ckhoi\PycharmProjects\MetaCollectorFramework\djs.db'
+# if __name__ == '__main__':
+#     scan_path = r"F:\manga"
+#     url = r'sqlite:///C:\Users\ckhoi\PycharmProjects\MetaCollectorFramework\djs.db'

@@ -25,6 +25,7 @@ class DJSScannerV1(object):
 
         meta_jsons = []
         for f in meta_files:
+            print(f"扫描元数据文件: {f}")
             with open(f, 'r', encoding='utf-8') as ft:
                 meta_jsons.append(json.load(ft))
 
@@ -32,15 +33,15 @@ class DJSScannerV1(object):
         associates = []
 
         for ind, d in enumerate(meta_jsons):
-            p = meta_files[ind].replace(f'{os.sep}metadata.txt', '')
+            p = meta_files[ind][:meta_files[ind].find('metadata')]
             print(f"Scanning path: {p}")
             # 旧版没有保存gallery id，从url提取
             GID = "#" + re.search(r'/g/\d+', d['URL']).group().replace("/g/", "")
             main_data = {
                 'url': d['URL'],
-                'index_title': d['Index Title:'],
-                'origin_title': d['Origin Title:'],
-                'gallery_id': GID,
+                'index_title': 'MISSING NEED FIX' if isinstance(d['Index Title:'], list) else d['Index Title:'],
+                'origin_title': 'MISSING NEED FIX' if isinstance(d['Origin Title:'], list) else d['Origin Title:'],
+                'gallery_id': int(GID.replace("#", "")),
                 'pages': int(d['Pages']),
                 'uploaded': 'Empty',
                 'path': p,
@@ -150,5 +151,12 @@ class DJSScannerV1(object):
         print("Import data to database")
         dao = UniversalDAO(self.db_url)
         dao.custom_import_raise('djs_books', scanner_input['djs_books'])
+        # for d in scanner_input['djs_books']:
+        #     try:
+        #         dao.custom_import_raise('djs_books', d)
+        #     except Exception:
+        #         with open('error.dat', 'wb') as f:
+        #             pickle.dump(d, f)
+        #         raise NotImplementedError("www")
         dao.custom_import_raise('djs_associate', scanner_input['djs_associate'])
         return True

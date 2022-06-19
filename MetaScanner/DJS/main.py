@@ -7,6 +7,7 @@ import pickle
 
 from MetaScanner.DJS.DJSV1 import DJSScannerV1
 from MetaScanner.DJS.DJSV2 import DJSScannerV2
+from MetaScanner.DJS.utils import SQLiteMetadataRepoUtil
 
 
 def scan_cli_launch():
@@ -75,3 +76,14 @@ def append_cli_launch():
     with open(args.pickle, 'rb') as f:
         data = pickle.load(f)
     djs.import_db(data)
+
+
+def init_new_metadata_db():
+    parser = argparse.ArgumentParser("Init new metadata db")
+    parser.add_argument('-p', '--path',
+                        type=str, help="目标路径", metavar="/PATH/DJS.db")
+
+    args = parser.parse_args()
+    ru = SQLiteMetadataRepoUtil(args.path)
+    ru.init_new_db()
+    print(f"sqlite:///{args.path}")
