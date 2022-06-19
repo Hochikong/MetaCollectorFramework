@@ -8,6 +8,8 @@ create table djs_books
     pages             integer   not null,
     uploaded          text(100) not null,
     path              text(500) not null unique,
+    device_tag        text(100) not null default '',
+    meta_version      text(10)  not null,
     preview           BLOB,
     secondary_preview BLOB
 );

@@ -25,8 +25,8 @@ setup(
     entry_points={
         'console_scripts': [
             'mcf_collect=MetaCollector.crawler_startup:cli_launch',
-            'djs_scan=MetaScanner.DJS.DJSV2:scan_cli_launch',
-            'djs_import=MetaScanner.DJS.DJSV2:append_cli_launch'
+            'djs_scan=MetaScanner.DJS.main:scan_cli_launch',
+            'djs_import=MetaScanner.DJS.main:append_cli_launch'
 
         ],
     },

@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2022/3/5 15:34
+# @Time    : 2022/6/19 18:25
 # @Author  : Hochikong
-# @FileName: DJSV2.py
+# @FileName: DJSV1.py
 
 import json
 import os
 import pickle
+import re
 
 from MetaCollector.base.utils.db.udao import UniversalDAO
 from MetaScanner.DJS.utils import list_median, walk_through_files
 
 
-class DJSScannerV2(object):
+class DJSScannerV1(object):
     def __init__(self, scan_path: str, db_url: str, pickle_save_dir: str):
         self.sc_path = scan_path
         self.db_url = db_url
@@ -33,16 +34,18 @@ class DJSScannerV2(object):
         for ind, d in enumerate(meta_jsons):
             p = meta_files[ind].replace(f'{os.sep}metadata.txt', '')
             print(f"Scanning path: {p}")
+            # 旧版没有保存gallery id，从url提取
+            GID = "#" + re.search(r'/g/\d+', d['URL']).group().replace("/g/", "")
             main_data = {
                 'url': d['URL'],
-                'index_title': d['Index Title'],
-                'origin_title': d['Origin Title'],
-                'gallery_id': int(d['Gallery ID'].replace("#", '')),
+                'index_title': d['Index Title:'],
+                'origin_title': d['Origin Title:'],
+                'gallery_id': GID,
                 'pages': int(d['Pages']),
-                'uploaded': d['Uploaded'],
+                'uploaded': 'Empty',
                 'path': p,
                 'device_tag': tag,
-                'meta_version': 'djsV2'
+                'meta_version': 'djsV1'
             }
 
             files = [f for f in os.listdir(main_data['path']) if 'metadata' not in f and 'Thumbs' not in f]
@@ -55,79 +58,79 @@ class DJSScannerV2(object):
             main_d.append(main_data)
 
             # 其他可选数据
-            tags = d.get('Tags', [])
+            tags = d.get('Tags:', [])
             tag_data = None
             for t in tags:
                 tag_data = {
-                    'gallery_id': int(d['Gallery ID'].replace("#", '')),
+                    'gallery_id': int(GID.replace("#", '')),
                     'property': 'Tags',
-                    'p_value': t.split("-count:")[0].strip()
+                    'p_value': t.split(" (")[0].strip()
                 }
             if tag_data is not None:
                 associates.append(tag_data)
 
-            artists = d.get('Artists', [])
+            artists = d.get('Artists:', [])
             artists_data = None
             for a in artists:
                 artists_data = {
-                    'gallery_id': int(d['Gallery ID'].replace("#", '')),
+                    'gallery_id': int(GID.replace("#", '')),
                     'property': 'Artists',
-                    'p_value': a.split("-count:")[0].strip()
+                    'p_value': a.split(" (")[0].strip()
                 }
             if artists_data is not None:
                 associates.append(artists_data)
 
-            groups = d.get('Groups', [])
+            groups = d.get('Groups:', [])
             groups_data = None
             for a in groups:
                 groups_data = {
-                    'gallery_id': int(d['Gallery ID'].replace("#", '')),
+                    'gallery_id': int(GID.replace("#", '')),
                     'property': 'Groups',
-                    'p_value': a.split("-count:")[0].strip()
+                    'p_value': a.split(" (")[0].strip()
                 }
             if groups_data is not None:
                 associates.append(groups_data)
 
-            languages = d.get('Languages', [])
+            languages = d.get('Languages:', [])
             languages_data = None
             for a in languages:
                 languages_data = {
-                    'gallery_id': int(d['Gallery ID'].replace("#", '')),
+                    'gallery_id': int(GID.replace("#", '')),
                     'property': 'Languages',
-                    'p_value': a.split("-count:")[0].strip()
+                    'p_value': a.split(" (")[0].strip()
                 }
             if languages_data is not None:
                 associates.append(languages_data)
 
-            categories = d.get('Categories', [])
+            categories = d.get('Categories:', [])
             categories_data = None
             for a in categories:
                 categories_data = {
-                    'gallery_id': int(d['Gallery ID'].replace("#", '')),
+                    'gallery_id': int(GID.replace("#", '')),
                     'property': 'Categories',
-                    'p_value': a.split("-count:")[0].strip()
+                    'p_value': a.split(" (")[0].strip()
                 }
             if categories_data is not None:
                 associates.append(categories_data)
 
-            parodies = d.get('Parodies', [])
+            parodies = d.get('Parodies:', [])
             parodies_data = None
             for a in parodies:
                 parodies_data = {
-                    'gallery_id': int(d['Gallery ID'].replace("#", '')),
+                    'gallery_id': int(GID.replace("#", '')),
                     'property': 'Parodies',
-                    'p_value': a.split("-count:")[0].strip()
+                    'p_value': a.split(" (")[0].strip()
                 }
             if parodies_data is not None:
                 associates.append(parodies_data)
 
-            characters = d.get('Characters', [])
+            characters = d.get('Characters:', [])
             characters_data = None
             for a in characters:
                 characters_data = {
-                    'gallery_id': int(d['Gallery ID'].replace("#", '')),
+                    'gallery_id': int(GID.replace("#", '')),
                     'property': 'Characters',
-                    'p_value': a.split("-count:")[0].strip()
+                    'p_value': a.split(" (")[0].strip()
                 }
             if categories_data is not None:
                 associates.append(characters_data)
@@ -149,8 +152,3 @@ class DJSScannerV2(object):
         dao.custom_import_raise('djs_books', scanner_input['djs_books'])
         dao.custom_import_raise('djs_associate', scanner_input['djs_associate'])
         return True
-
-
-if __name__ == '__main__':
-    scan_path = r"F:\manga"
-    url = r'sqlite:///C:\Users\ckhoi\PycharmProjects\MetaCollectorFramework\djs.db'

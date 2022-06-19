@@ -38,16 +38,18 @@ class SQLiteMetadataRepoUtil(object):
         self.__ddl = """
         create table djs_books
         (
-            id           integer primary key autoincrement,
-            url          text(500) not null,
-            index_title  text(500) not null,
-            origin_title text(500) not null,
-            gallery_id   integer   not null,
-            pages        integer   not null,
-            uploaded     text(100) not null,
-            path         text(500) not null unique,
-            preview      BLOB,
-            secondary_preview BLOB
+        id                integer primary key autoincrement,
+        url               text(500) not null,
+        index_title       text(500) not null,
+        origin_title      text(500) not null,
+        gallery_id        integer   not null,
+        pages             integer   not null,
+        uploaded          text(100) not null,
+        path              text(500) not null unique,
+        device_tag        text(100) not null default '',
+        meta_version      text(10)  not null,
+        preview           BLOB,
+        secondary_preview BLOB
         );
 
         create table djs_associate
@@ -112,7 +114,6 @@ class SimpleDJSQueryDAO(UniversalDAO):
         image.save(path)
         return path
 
-
-if __name__ == '__main__':
-    ru = SQLiteMetadataRepoUtil(r'C:\Users\ckhoi\PycharmProjects\MetaCollectorFramework\djs.db')
-    ru.init_new_db()
+# if __name__ == '__main__':
+#     ru = SQLiteMetadataRepoUtil(r'C:\Users\ckhoi\PycharmProjects\MetaCollectorFramework\djs.db')
+#     ru.init_new_db()
