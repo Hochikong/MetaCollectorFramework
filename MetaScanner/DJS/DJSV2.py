@@ -57,80 +57,66 @@ class DJSScannerV2(object):
 
             # 其他可选数据
             tags = d.get('Tags', [])
-            tag_data = None
             for t in tags:
                 tag_data = {
                     'gallery_id': int(d['Gallery ID'].replace("#", '')),
                     'property': 'Tags',
                     'p_value': t.split("-count:")[0].strip()
                 }
-            if tag_data is not None:
                 associates.append(tag_data)
 
             artists = d.get('Artists', [])
-            artists_data = None
             for a in artists:
                 artists_data = {
                     'gallery_id': int(d['Gallery ID'].replace("#", '')),
                     'property': 'Artists',
                     'p_value': a.split("-count:")[0].strip()
                 }
-            if artists_data is not None:
                 associates.append(artists_data)
 
             groups = d.get('Groups', [])
-            groups_data = None
             for a in groups:
                 groups_data = {
                     'gallery_id': int(d['Gallery ID'].replace("#", '')),
                     'property': 'Groups',
                     'p_value': a.split("-count:")[0].strip()
                 }
-            if groups_data is not None:
                 associates.append(groups_data)
 
             languages = d.get('Languages', [])
-            languages_data = None
             for a in languages:
                 languages_data = {
                     'gallery_id': int(d['Gallery ID'].replace("#", '')),
                     'property': 'Languages',
                     'p_value': a.split("-count:")[0].strip()
                 }
-            if languages_data is not None:
                 associates.append(languages_data)
 
             categories = d.get('Categories', [])
-            categories_data = None
             for a in categories:
                 categories_data = {
                     'gallery_id': int(d['Gallery ID'].replace("#", '')),
                     'property': 'Categories',
                     'p_value': a.split("-count:")[0].strip()
                 }
-            if categories_data is not None:
                 associates.append(categories_data)
 
             parodies = d.get('Parodies', [])
-            parodies_data = None
             for a in parodies:
                 parodies_data = {
                     'gallery_id': int(d['Gallery ID'].replace("#", '')),
                     'property': 'Parodies',
                     'p_value': a.split("-count:")[0].strip()
                 }
-            if parodies_data is not None:
                 associates.append(parodies_data)
 
             characters = d.get('Characters', [])
-            characters_data = None
             for a in characters:
                 characters_data = {
                     'gallery_id': int(d['Gallery ID'].replace("#", '')),
                     'property': 'Characters',
                     'p_value': a.split("-count:")[0].strip()
                 }
-            if categories_data is not None:
                 associates.append(characters_data)
         print("Scan done.")
 
