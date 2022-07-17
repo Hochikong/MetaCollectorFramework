@@ -117,3 +117,8 @@ class SimpleDJSQueryDAO(UniversalDAO):
 # if __name__ == '__main__':
 #     ru = SQLiteMetadataRepoUtil(r'C:\Users\ckhoi\PycharmProjects\MetaCollectorFramework\djs.db')
 #     ru.init_new_db()
+
+# 导入数据
+# djs_scan -p \\DESKTOP-INTEL31\XXX --db sqlite:///G:\MetaDataCenter\TMP\djs.db --tag intel_laptop --version V1
+#
+# djs_scan -p \\DESKTOP-INTEL31\Doujinshis\ --db sqlite:///G:\MetaDataCenter\djs.db --tag intel_laptop --version V2
