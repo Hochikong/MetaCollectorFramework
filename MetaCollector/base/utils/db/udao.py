@@ -29,6 +29,13 @@ class UniversalDAO(object):
         if self.auto_dispose:
             self.dispose()
 
+    def connect(self):
+        self._connect()
+
+    def disconnect(self):
+        self.auto_dispose = True
+        self._disconnect()
+
     def dispose(self):
         self.engine.dispose()
 
