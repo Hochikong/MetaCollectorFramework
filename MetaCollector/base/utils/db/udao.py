@@ -1,5 +1,8 @@
+import time
 import traceback
 from typing import List
+import concurrent.futures as futures
+from concurrent.futures import thread
 
 from sqlalchemy import Table, MetaData
 from sqlalchemy import create_engine
@@ -14,6 +17,7 @@ class UniversalDAO(object):
         self.session: Session = None
         self.table_object: Table = None
         self.auto_dispose: bool = True
+        self.__table_caches = {}
 
     def _connect(self):
         try:
@@ -84,3 +88,35 @@ class UniversalDAO(object):
         finally:
             self._disconnect()
             return succeed == 1
+
+    def __new_table(self, name):
+        return Table(name, self.md, autoload=True, autoload_with=self.engine)
+
+    def __get_table_object(self, table_name: str):
+        if table_name not in self.__table_caches.keys():
+            # self.logger.info("建立新的表对象并缓存")
+            with futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(self.__new_table, table_name)
+                try:
+                    table_object = future.result(15)
+                except futures.TimeoutError:
+                    # print('建表对象超时')
+                    self.engine.dispose()
+                    del self.engine
+                    del self.md
+                    time.sleep(2)
+                    self.md = MetaData()
+                    self.engine = create_engine(self.db_url, connect_args={'connect_timeout': 120}, pool_pre_ping=True,
+                                                pool_recycle=3600)
+                    table_object = self.__new_table(table_name)
+                executor._threads.clear()
+                futures.thread._threads_queues.clear()
+
+            self.__table_caches[table_name] = table_object
+            return table_object
+        else:
+            # self.logger.info("从已有的表对象列表获取实例")
+            return self.__table_caches[table_name]
+
+    def get_table_object(self, table_name):
+        return self.__get_table_object(table_name)
