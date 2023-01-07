@@ -87,3 +87,12 @@ def init_new_metadata_db():
     ru = SQLiteMetadataRepoUtil(args.path)
     ru.init_new_db()
     print(f"sqlite:///{args.path}")
+
+# Usage
+# 导入数据
+# djs_scan -p \\DESKTOP-INTEL31\XXX --db sqlite:///G:\MetaDataCenter\TMP\djs.db --tag intel_laptop --version V1
+#
+# djs_scan -p \\DESKTOP-INTEL31\Doujinshis\ --db sqlite:///G:\MetaDataCenter\djs.db --tag intel_laptop --version V2
+
+# 新数据库
+# new_djs_db -p G:\\TMP\\DJS.db
