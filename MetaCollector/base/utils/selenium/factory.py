@@ -106,6 +106,11 @@ def chrome_factory_wireV2(driver_path: str,
     if headless and '--headless' not in addition_arguments:
         chrome_options.add_argument('--headless')
 
+    # bypass cloudflare patch (available since 202308)
+    chrome_options.add_argument("--auto-open-devtools-for-tabs")
+    chrome_options.add_argument("--disable-popup-blocking")
+    chrome_options.browser_executable_path = str(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+
     if pref is not None:
         if len(pref.keys()) > 0:
             chrome_options.add_experimental_option("prefs", pref)
