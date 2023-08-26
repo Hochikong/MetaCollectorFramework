@@ -40,7 +40,9 @@ def chrome_factory(driver_path: str,
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option("useAutomationExtension", False)
 
-    return Chrome(executable_path=driver_path, options=chrome_options)
+    # selenium 4.10.0 not support 'driver_executable_path' anymore
+    # return Chrome(executable_path=driver_path, options=chrome_options)
+    return Chrome(options=chrome_options)
 
 
 def chrome_factory_wire(driver_path: str,
@@ -79,7 +81,9 @@ def chrome_factory_wire(driver_path: str,
         'request_storage_max_size': 50  # Store no more than 50 requests in memory
     }
 
-    return webdriver.Chrome(executable_path=driver_path, options=chrome_options, seleniumwire_options=options)
+    # return webdriver.Chrome(executable_path=driver_path, options=chrome_options, seleniumwire_options=options)
+    # selenium 4.10.0 not support 'driver_executable_path' anymore
+    return webdriver.Chrome(options=chrome_options, seleniumwire_options=options)
 
 
 def chrome_factory_wireV2(driver_path: str,
@@ -125,7 +129,9 @@ def chrome_factory_wireV2(driver_path: str,
         'request_storage_max_size': 50  # Store no more than 50 requests in memory
     }
 
-    return webdriver.Chrome(executable_path=driver_path, options=chrome_options, seleniumwire_options=options)
+    # return webdriver.Chrome(executable_path=driver_path, options=chrome_options, seleniumwire_options=options)
+    # selenium 4.10.0 not support 'driver_executable_path' anymore
+    return webdriver.Chrome(options=chrome_options, seleniumwire_options=options)
 
 
 def chrome_factory_uc(driver_path: str,
@@ -150,7 +156,9 @@ def chrome_factory_uc(driver_path: str,
     for opts in addition_arguments:
         chrome_options.add_argument(opts)
 
-    driver = uc.Chrome(driver_executable_path=driver_path, options=chrome_options, version_main=version)
+    # driver = uc.Chrome(driver_executable_path=driver_path, options=chrome_options, version_main=version)
+    # selenium 4.10.0 not support 'driver_executable_path' anymore
+    driver = uc.Chrome(options=chrome_options, version_main=version)
 
     download_params = {
         "behavior": "allow",
