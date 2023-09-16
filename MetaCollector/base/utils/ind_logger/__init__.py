@@ -1,6 +1,6 @@
+from MetaCollector.base.utils.ind_logger.notify import NotificationHandlerNew
 from loguru import logger
 
-from solaris.newarch.ind_logger.notify import NotificationHandlerNew
 
 LOG_LEVEL_ENUM = ['TRACE', 'DEBUG', 'INFO', 'SUCCESS', 'WARNING', 'ERROR', 'CRITICAL']
 
