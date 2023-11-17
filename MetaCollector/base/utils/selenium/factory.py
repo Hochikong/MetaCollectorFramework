@@ -1,6 +1,9 @@
 import json
+import os
 from typing import List
+import subprocess
 
+import psutil
 import seleniumwire.undetected_chromedriver as ucw
 # uc升级到3.1.0
 # import undetected_chromedriver.v2 as uc
@@ -43,6 +46,54 @@ def chrome_factory(driver_path: str,
     # selenium 4.10.0 not support 'driver_executable_path' anymore
     # return Chrome(executable_path=driver_path, options=chrome_options)
     return Chrome(options=chrome_options)
+
+
+class ChromeFactoryRemote(object):
+    def __init__(self):
+        self.cmd_procs = {}
+
+    def get_browser(self, chrome_executable_path: str, debug_port: int, user_data_dir: str) -> str:
+        """
+        以远程调试模式启动浏览器
+        :param chrome_executable_path: 如果在windows上，需要把chrome.exe的路径添加到path里
+        :param debug_port:
+        :param user_data_dir:
+        :return:
+        """
+        cmd = f'{chrome_executable_path} --remote-debugging-port={debug_port} --user-data-dir={user_data_dir}'
+        self.cmd_procs[cmd] = subprocess.Popen(
+            f'{chrome_executable_path} --remote-debugging-port={debug_port} --user-data-dir={user_data_dir}',
+            shell=True)
+        return cmd
+
+    def kill_browser(self, proc_key: str):
+        proc = self.cmd_procs.get(proc_key)
+        if proc is not None:
+            parent = psutil.Process(proc.pid)
+            for child in parent.children(recursive=True):
+                child.kill()
+        self.cmd_procs.pop(proc_key)
+
+    @staticmethod
+    def chrome_factory_remote(host: str, port: int,
+                              addition_arguments: List[str],
+                              pref: dict = None,
+                              headless: bool = False,
+                              beta_hide_info: bool = False) -> Chrome:
+        chrome_options = Options()
+        for opts in addition_arguments:
+            chrome_options.add_argument(opts)
+
+        if pref is not None:
+            if len(pref.keys()) > 0:
+                chrome_options.add_experimental_option("prefs", pref)
+
+        if beta_hide_info:
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option("useAutomationExtension", False)
+
+        chrome_options.add_experimental_option("debuggerAddress", f"{host}:{port}")
+        return Chrome(options=chrome_options)
 
 
 def chrome_factory_wire(driver_path: str,
