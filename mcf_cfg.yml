@@ -1,6 +1,11 @@
 selenium:
   #  enable_wire: true
   enable_uc: true
+
+  #  enable_remote: true
+  #  remote_debug_port: 9223
+  #  chrome_path: chrome.exe
+
   xdisplay_backend: xvnc
   xdisplay_port: 5905
   forward_port: 6801

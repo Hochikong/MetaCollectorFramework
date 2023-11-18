@@ -1,5 +1,7 @@
 import json
 import os
+import time
+from functools import reduce
 from typing import List
 import subprocess
 
@@ -60,10 +62,12 @@ class ChromeFactoryRemote(object):
         :param user_data_dir:
         :return:
         """
+        cmd = self.__get_browser_init(chrome_executable_path, debug_port, user_data_dir)
+        return cmd
+
+    def __get_browser_init(self, chrome_executable_path, debug_port, user_data_dir):
         cmd = f'{chrome_executable_path} --remote-debugging-port={debug_port} --user-data-dir={user_data_dir}'
-        self.cmd_procs[cmd] = subprocess.Popen(
-            f'{chrome_executable_path} --remote-debugging-port={debug_port} --user-data-dir={user_data_dir}',
-            shell=True)
+        self.cmd_procs[cmd] = subprocess.Popen(cmd, shell=True)
         return cmd
 
     def kill_browser(self, proc_key: str):
@@ -74,25 +78,33 @@ class ChromeFactoryRemote(object):
                 child.kill()
         self.cmd_procs.pop(proc_key)
 
+    def kill_all(self):
+        cmds = list(self.cmd_procs.keys())
+        for k in cmds:
+            self.kill_browser(k)
+
     @staticmethod
     def chrome_factory_remote(host: str, port: int,
                               addition_arguments: List[str],
                               pref: dict = None,
-                              headless: bool = False,
                               beta_hide_info: bool = False) -> Chrome:
         chrome_options = Options()
         for opts in addition_arguments:
+            if 'user-data-dir' in opts:
+                continue
             chrome_options.add_argument(opts)
 
-        if pref is not None:
-            if len(pref.keys()) > 0:
-                chrome_options.add_experimental_option("prefs", pref)
+        # 远程debug的chrome不支持此刻添加prefs，需要手动编辑该user_data_dir对应profile的下载目录
+
+        # if pref is not None:
+        #     if len(pref.keys()) > 0:
+        #         chrome_options.add_experimental_option("prefs", pref)
 
         if beta_hide_info:
             chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
             chrome_options.add_experimental_option("useAutomationExtension", False)
-
         chrome_options.add_experimental_option("debuggerAddress", f"{host}:{port}")
+
         return Chrome(options=chrome_options)
 
 

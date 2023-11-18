@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+import traceback
 
 import psutil
 
@@ -46,9 +47,6 @@ def cli_launch():
         else:
             xvfb_launch = agent.enable_xvfb()
 
-    print("启动chrome")
-    agent.launch_for_drivers()
-
     if args.free:
         print("Enter '/h' to get more information")
         while True:
@@ -63,6 +61,7 @@ def cli_launch():
                         for child in parent.children(recursive=True):
                             child.kill()
                         proc.terminate()
+                agent.dispose()
                 break
             elif iv == '/sc':
                 agent.hosted_instance.brow.get("https://nowsecure.nl")
@@ -75,12 +74,40 @@ def cli_launch():
                 /ls - list all drivers
                 /get - goto url, example: /get;https://xxx.com
                 /run - run driver, example: /run;NAMESPACE:DRIVER
+                /remote - create a remote debug chrome, example: /remote;PORT "USER_DATA_DIR" e.g. /remote;9223 "D:\\selenium_workspace\\remote_ud"
+                                                                 /remote;ls  
+                                                                 /remote;kill PORT
                 """)
             elif iv == '/ls':
                 print("")
+            elif iv.startswith('/remote'):
+                if iv.split(';')[-1] == 'ls':
+                    print(list(agent.browser_holder.cmd_procs.keys()))
+                elif iv.split(';')[-1].startswith('kill'):
+                    try:
+                        port = int(iv.split(';')[-1].split(' ')[-1])
+                        for cmd in list(agent.browser_holder.cmd_procs.keys()):
+                            if str(port) in cmd:
+                                agent.browser_holder.kill_browser(cmd)
+                    except ValueError:
+                        print("Port error can't parse to int")
+                    except Exception:
+                        print(traceback.format_exc())
+                else:
+                    try:
+                        port = int(iv.split(';')[-1].split(' ')[0])
+                        ud_path = iv.split(';')[-1].split(' ')[-1]
+                        agent.browser_holder.get_browser(agent.chrome_path, port, ud_path)
+                    except ValueError:
+                        print("Port error can't parse to int")
+                    except Exception:
+                        print(traceback.format_exc())
             elif iv.startswith('/get'):
                 agent.hosted_instance.brow.get(iv.replace("/get;", "").strip())
             elif iv.startswith('/run'):
+                print("启动chrome")
+                agent.launch_for_drivers()
+
                 ns_dr = iv.split(";")[-1]
                 ns = ns_dr.split(":")[0]
                 dr = ns_dr.split(":")[1]
@@ -122,6 +149,7 @@ def cli_launch():
 
     if proc is not None:
         proc.terminate()
+    agent.dispose()
 
 
 def add_basic_parser(parser):
@@ -134,8 +162,10 @@ def add_basic_parser(parser):
     parser.add_argument('-D', '--driver',
                         type=str, help="加载哪个驱动", metavar="驱动名")
     parser.add_argument('-r', '--range', help="历史取数模式，指定范围进行取数", action='store_true')
-    parser.add_argument('-x', '--xdisplay', help="是否启用headless模式，仅支持在linux下运行，可以配置文件中选择基于Xvfb或者VNC的后端",
+    parser.add_argument('-x', '--xdisplay',
+                        help="是否启用headless模式，仅支持在linux下运行，可以配置文件中选择基于Xvfb或者VNC的后端",
                         action='store_true')
-    parser.add_argument('-f', '--forward', help="通过noVNC转发本地xdisplay到浏览器", metavar="用于被外部访问的目标端口", type=int)
+    parser.add_argument('-f', '--forward', help="通过noVNC转发本地xdisplay到浏览器", metavar="用于被外部访问的目标端口",
+                        type=int)
     parser.add_argument('--free', help="启用自由模式，不执行任何操作，仅启动浏览器", action='store_true')
     parser.add_argument('--all_notify', help="启用全部通知", action='store_true')

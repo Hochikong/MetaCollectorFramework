@@ -5,6 +5,7 @@
 import datetime
 import os
 import subprocess
+import time
 import traceback
 from time import sleep
 
@@ -12,7 +13,7 @@ import psutil
 from stevedore import driver
 
 from MetaCollector.base.utils.ind_logger.notify import EmailNotifierWrapper
-from MetaCollector.base.utils.selenium.factory import DriverManagerMock
+from MetaCollector.base.utils.selenium.factory import DriverManagerMock, ChromeFactoryRemote
 from MetaCollector.base.utils.selenium.factory import yaml_loader, chrome_factory, chrome_factory_uc, \
     chrome_factory_wireV2
 from MetaCollector.crawler.Main import MCFDataCollector
@@ -64,6 +65,13 @@ class CollectAgent(object):
         # 0 -> xvfb, 1 -> xvnc, 2 -> xvfb by xvfbwrapper
         self.x_channel = -1
 
+        # 远程调试
+        self.enable_remote = False
+        self.remote_debug_port = 9222
+        self.browser_holder = ChromeFactoryRemote()
+        self.ud_path = None
+        self.chrome_path = None
+
     def enable_all_notify(self):
         self.disable_unnecessary_notify = False
 
@@ -83,6 +91,9 @@ class CollectAgent(object):
                     child.kill()
                 self.noVNC_proc.terminate()
                 self.noVNC_proc = None
+
+            if self.browser_holder is not None:
+                self.browser_holder.kill_all()
 
         except Exception:
             print("关闭Agent时报错：{}".format(traceback.format_exc()))
@@ -155,6 +166,10 @@ class CollectAgent(object):
         self.disable_insert = self.yaml_cfg['selenium'].get('disable_insert', False)
         self.enable_wire = self.yaml_cfg['selenium'].get('enable_wire', False)
         self.enable_uc = self.yaml_cfg['selenium'].get('enable_uc', False)
+
+        self.enable_remote = self.yaml_cfg['selenium'].get('enable_remote', False)
+        self.remote_debug_port = self.yaml_cfg['selenium'].get('remote_debug_port', 9222)
+        self.chrome_path = self.yaml_cfg['selenium'].get('chrome_path', None)
         self.chrome_version = self.yaml_cfg['selenium'].get('version', 90)
 
         self.xvfb_backend = self.yaml_cfg['selenium'].get('xdisplay_backend', 'xvfb')
@@ -185,7 +200,8 @@ class CollectAgent(object):
             for c in self.addition_args:
                 if c.startswith('--user-data-dir'):
                     try:
-                        os.makedirs(c.split('=')[-1])
+                        self.ud_path = c.split('=')[-1]
+                        os.makedirs(self.ud_path)
                         print("已自动创建userdata dir")
                         break
                     except FileExistsError:
@@ -213,6 +229,20 @@ class CollectAgent(object):
                 self.yaml_cfg, disable_insert=True, enable_wire=False, enable_uc=True
             )
             self.hosted_instance.log_info("以uc模式启动")
+        elif self.enable_remote:
+            print("启用remote模式")
+            if self.chrome_path is None:
+                raise AssertionError("没有提供chrome的可执行文件路径！")
+            if self.ud_path is None:
+                raise AssertionError("没有提供chrome的user_data_dir路径！")
+            # self.browser_holder.get_browser(self.chrome_path, self.remote_debug_port, self.ud_path)
+            time.sleep(2)
+            self.hosted_instance = MCFDataCollector.build(
+                self.browser_holder.chrome_factory_remote('127.0.0.1', self.remote_debug_port,
+                                                          self.addition_args, self.prefs),
+                self.yaml_cfg, disable_insert=True, enable_wire=False, enable_uc=True
+            )
+            self.hosted_instance.log_info("以remote模式启动")
         else:
             print("启用普通模式")
             self.hosted_instance = MCFDataCollector.build(
