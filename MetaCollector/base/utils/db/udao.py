@@ -111,6 +111,7 @@ class UniversalDAO(object):
                     table_object = self.__new_table(table_name)
                 executor._threads.clear()
                 futures.thread._threads_queues.clear()
+                executor.shutdown(wait=False)
 
             self.__table_caches[table_name] = table_object
             return table_object
