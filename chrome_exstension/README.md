@@ -1,0 +1,1 @@
+# A simple chrome extension for sending current page's URL to a specific http server via post requests.
