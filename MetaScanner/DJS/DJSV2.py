@@ -40,11 +40,14 @@ class DJSScannerV2(object):
                 'origin_title': d['Origin Title'],
                 'gallery_id': int(d['Gallery ID'].replace("#", '')),
                 'pages': int(d['Pages']),
-                'uploaded': d['Uploaded'],
+                'uploaded': d.get('Uploaded', ''),
                 'path': p,
                 'device_tag': tag,
                 'meta_version': 'djsV2'
             }
+
+            if main_data['uploaded'] is None:
+                main_data['uploaded'] = ''
 
             files = [f for f in os.listdir(main_data['path']) if 'metadata' not in f and 'Thumbs' not in f]
             sort_files = sorted(files, key=lambda x: int(os.path.splitext(x)[0]))
