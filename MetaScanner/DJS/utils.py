@@ -84,6 +84,7 @@ class SQLiteMetadataRepoUtil(object):
         cursor_obj = connection.cursor()
         cursor_obj.executescript(self.__drop)
         cursor_obj.executescript(self.__ddl)
+        cursor_obj.close()
 
         connection.close()
         return target_file
