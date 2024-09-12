@@ -3,11 +3,13 @@
 # @Author  : Hochikong
 # @FileName: server.py
 
-from typing import Union
-
 from fastapi import FastAPI
 
+from CollectorREST.database import engine
+from CollectorREST.entities import db_entity
 from CollectorREST.routers import tasks
+
+db_entity.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.include_router(tasks.router)
