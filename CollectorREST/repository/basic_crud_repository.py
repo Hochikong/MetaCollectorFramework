@@ -2,8 +2,8 @@ import datetime
 
 from sqlalchemy.orm import Session
 from typing import List
-from CollectorREST.entities import db_entity
-from CollectorREST.domains import tasks
+from ..entities import db_entity
+from ..domains import tasks
 
 
 def get_task_by_uid(db: Session, uuid: str) -> db_entity.TaskListEntity:
