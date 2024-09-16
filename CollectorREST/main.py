@@ -3,23 +3,24 @@
 # @Author  : Hochikong
 # @FileName: server.py
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 
 from .database import engine
 from .entities import db_entity
 from .controller import tasks_controller
-from .services import task_queue_maintainer
+from .dependencies import get_queue_maintainer
+
 # from uvicorn.server import logger
 logger = logging.getLogger('main_app')
 db_entity.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(dependencies=[Depends(get_queue_maintainer)])
 app.include_router(tasks_controller.router)
 
-queue_maintainer = task_queue_maintainer.TaskQueueMaintainer(logger=logger)
-queue_maintainer.load_pending_tasks_from_db()
+queue_m = get_queue_maintainer()
+logger.info("Queue Maintainer init done!")
 
 
 @app.get("/")
 def read_root():
-    return queue_maintainer.queue.qsize()
+    return {"Hello": "World"}
