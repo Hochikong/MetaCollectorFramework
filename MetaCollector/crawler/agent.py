@@ -94,6 +94,11 @@ class CollectAgent(object):
             if self.browser_holder is not None:
                 self.browser_holder.kill_all()
 
+            try:
+                self.hosted_instance.brow.quit()
+            except Exception:
+                pass
+
         except Exception:
             print("关闭Agent时报错：{}".format(traceback.format_exc()))
             pass
