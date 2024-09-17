@@ -14,8 +14,7 @@ from stevedore import driver
 
 from MetaCollector.base.utils.ind_logger.notify import EmailNotifierWrapper
 from MetaCollector.base.utils.selenium.factory import DriverManagerMock, ChromeFactoryRemote
-from MetaCollector.base.utils.selenium.factory import yaml_loader, chrome_factory, chrome_factory_uc, \
-    chrome_factory_wireV2
+from MetaCollector.base.utils.selenium.factory import yaml_loader, chrome_factory, chrome_factory_uc
 from MetaCollector.crawler.Main import MCFDataCollector
 
 

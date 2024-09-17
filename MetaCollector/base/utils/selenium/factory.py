@@ -6,14 +6,14 @@ from typing import List
 import subprocess
 
 import psutil
-import seleniumwire.undetected_chromedriver as ucw
+# import seleniumwire.undetected_chromedriver as ucw
 # uc升级到3.1.0
 # import undetected_chromedriver.v2 as uc
 import undetected_chromedriver as uc
 import yaml
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-from seleniumwire import webdriver
+# from seleniumwire import webdriver
 
 
 def chrome_factory(driver_path: str,
@@ -108,93 +108,93 @@ class ChromeFactoryRemote(object):
         return Chrome(options=chrome_options)
 
 
-def chrome_factory_wire(driver_path: str,
-                        addition_arguments: List[str],
-                        pref: dict = None,
-                        headless: bool = False,
-                        beta_hide_info: bool = False
-                        ) -> Chrome:
-    """构建浏览器的工厂函数，配合selenium wire使用（现在可以使用undetected chromedriver，测试版本）
+# def chrome_factory_wire(driver_path: str,
+#                         addition_arguments: List[str],
+#                         pref: dict = None,
+#                         headless: bool = False,
+#                         beta_hide_info: bool = False
+#                         ) -> Chrome:
+#     """构建浏览器的工厂函数，配合selenium wire使用（现在可以使用undetected chromedriver，测试版本）
+#
+#     :param driver_path: webdriver路径
+#     :param addition_arguments: 附加参数列表，会被add_argument添加到Options中用于实例的创建
+#     :param pref: Chrome experimental_option
+#     :param headless: 是否以无头模式启动
+#     :param beta_hide_info: 是否使用beta版本的浏览器信息隐藏方法
+#     :return: selenium.webdriver.Chrome
+#     """
+#     # chrome_options = Options()
+#     chrome_options = ucw.ChromeOptions()
+#     for opts in addition_arguments:
+#         chrome_options.add_argument(opts)
+#     if headless and '--headless' not in addition_arguments:
+#         chrome_options.add_argument('--headless')
+#
+#     if pref is not None:
+#         if len(pref.keys()) > 0:
+#             chrome_options.add_experimental_option("prefs", pref)
+#
+#     if beta_hide_info:
+#         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+#         chrome_options.add_experimental_option("useAutomationExtension", False)
+#
+#     # use memory to storage requests with limit
+#     options = {
+#         'request_storage': 'memory',
+#         'request_storage_max_size': 50  # Store no more than 50 requests in memory
+#     }
+#
+#     # return webdriver.Chrome(executable_path=driver_path, options=chrome_options, seleniumwire_options=options)
+#     # selenium 4.10.0 not support 'driver_executable_path' anymore
+#     return webdriver.Chrome(options=chrome_options, seleniumwire_options=options)
 
-    :param driver_path: webdriver路径
-    :param addition_arguments: 附加参数列表，会被add_argument添加到Options中用于实例的创建
-    :param pref: Chrome experimental_option
-    :param headless: 是否以无头模式启动
-    :param beta_hide_info: 是否使用beta版本的浏览器信息隐藏方法
-    :return: selenium.webdriver.Chrome
-    """
-    # chrome_options = Options()
-    chrome_options = ucw.ChromeOptions()
-    for opts in addition_arguments:
-        chrome_options.add_argument(opts)
-    if headless and '--headless' not in addition_arguments:
-        chrome_options.add_argument('--headless')
 
-    if pref is not None:
-        if len(pref.keys()) > 0:
-            chrome_options.add_experimental_option("prefs", pref)
-
-    if beta_hide_info:
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option("useAutomationExtension", False)
-
-    # use memory to storage requests with limit
-    options = {
-        'request_storage': 'memory',
-        'request_storage_max_size': 50  # Store no more than 50 requests in memory
-    }
-
-    # return webdriver.Chrome(executable_path=driver_path, options=chrome_options, seleniumwire_options=options)
-    # selenium 4.10.0 not support 'driver_executable_path' anymore
-    return webdriver.Chrome(options=chrome_options, seleniumwire_options=options)
-
-
-def chrome_factory_wireV2(driver_path: str,
-                          addition_arguments: List[str],
-                          pref: dict = None,
-                          headless: bool = False,
-                          beta_hide_info: bool = False
-                          ) -> Chrome:
-    """
-    2022-04-21 随着selenium wire与undetected chromedriver升级的适配版本
-
-    构建浏览器的工厂函数，配合selenium wire使用（现在可以使用undetected chromedriver，测试版本）
-
-    :param driver_path: webdriver路径
-    :param addition_arguments: 附加参数列表，会被add_argument添加到Options中用于实例的创建
-    :param pref: Chrome experimental_option
-    :param headless: 是否以无头模式启动
-    :param beta_hide_info: 是否使用beta版本的浏览器信息隐藏方法
-    :return: selenium.webdriver.Chrome
-    """
-    chrome_options = ucw.ChromeOptions()
-    for opts in addition_arguments:
-        chrome_options.add_argument(opts)
-    if headless and '--headless' not in addition_arguments:
-        chrome_options.add_argument('--headless')
-
-    # bypass cloudflare patch (available since 202308)
-    chrome_options.add_argument("--auto-open-devtools-for-tabs")
-    chrome_options.add_argument("--disable-popup-blocking")
-    chrome_options.browser_executable_path = str(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-
-    if pref is not None:
-        if len(pref.keys()) > 0:
-            chrome_options.add_experimental_option("prefs", pref)
-
-    if beta_hide_info:
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option("useAutomationExtension", False)
-
-    # use memory to storage requests with limit
-    options = {
-        'request_storage': 'memory',
-        'request_storage_max_size': 50  # Store no more than 50 requests in memory
-    }
-
-    # return webdriver.Chrome(executable_path=driver_path, options=chrome_options, seleniumwire_options=options)
-    # selenium 4.10.0 not support 'driver_executable_path' anymore
-    return webdriver.Chrome(options=chrome_options, seleniumwire_options=options)
+# def chrome_factory_wireV2(driver_path: str,
+#                           addition_arguments: List[str],
+#                           pref: dict = None,
+#                           headless: bool = False,
+#                           beta_hide_info: bool = False
+#                           ) -> Chrome:
+#     """
+#     2022-04-21 随着selenium wire与undetected chromedriver升级的适配版本
+#
+#     构建浏览器的工厂函数，配合selenium wire使用（现在可以使用undetected chromedriver，测试版本）
+#
+#     :param driver_path: webdriver路径
+#     :param addition_arguments: 附加参数列表，会被add_argument添加到Options中用于实例的创建
+#     :param pref: Chrome experimental_option
+#     :param headless: 是否以无头模式启动
+#     :param beta_hide_info: 是否使用beta版本的浏览器信息隐藏方法
+#     :return: selenium.webdriver.Chrome
+#     """
+#     chrome_options = ucw.ChromeOptions()
+#     for opts in addition_arguments:
+#         chrome_options.add_argument(opts)
+#     if headless and '--headless' not in addition_arguments:
+#         chrome_options.add_argument('--headless')
+#
+#     # bypass cloudflare patch (available since 202308)
+#     chrome_options.add_argument("--auto-open-devtools-for-tabs")
+#     chrome_options.add_argument("--disable-popup-blocking")
+#     chrome_options.browser_executable_path = str(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+#
+#     if pref is not None:
+#         if len(pref.keys()) > 0:
+#             chrome_options.add_experimental_option("prefs", pref)
+#
+#     if beta_hide_info:
+#         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+#         chrome_options.add_experimental_option("useAutomationExtension", False)
+#
+#     # use memory to storage requests with limit
+#     options = {
+#         'request_storage': 'memory',
+#         'request_storage_max_size': 50  # Store no more than 50 requests in memory
+#     }
+#
+#     # return webdriver.Chrome(executable_path=driver_path, options=chrome_options, seleniumwire_options=options)
+#     # selenium 4.10.0 not support 'driver_executable_path' anymore
+#     return webdriver.Chrome(options=chrome_options, seleniumwire_options=options)
 
 
 def chrome_factory_uc(driver_path: str,
