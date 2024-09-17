@@ -64,10 +64,9 @@ class AgentWrapper(object):
         agent = self.agent
         print("加载配置文件中...")
         if args.notify:
-            self.notify_content = json.loads(args.notify)
-            agent.load_cfg_from_dict(self.cfg_content, self.notify_content, args.debug)
+            agent.load_cfg_from_files(args.cfg, args.notify, args.debug)
         else:
-            agent.load_cfg_from_dict(self.cfg_content, debug_mode=args.debug)
+            agent.load_cfg_from_files(args.cfg, debug_mode=args.debug)
 
         if args.all_notify:
             agent.enable_all_notify()
