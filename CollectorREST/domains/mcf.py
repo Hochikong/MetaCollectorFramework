@@ -32,4 +32,4 @@ class RuntimeStorageTaskReceive(BaseModel):
 
 class MgmtCommand(BaseModel):
     cmd: str
-    cfg_input: Optional[dict]
+    cfg_input: Optional[str]

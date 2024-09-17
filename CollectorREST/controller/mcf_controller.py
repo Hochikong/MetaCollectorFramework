@@ -1,12 +1,9 @@
 import traceback
-import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy.orm.exc import NoResultFound
-from ..domains.mcf import ArgsReceive, RuntimeStorageTaskReceive, MgmtCommand
-from ..dependencies import get_queue_maintainer, get_agent_service
-from ..repository import basic_crud_repository
-from ..database import SessionLocal
+
+from ..dependencies import get_agent_service
+from ..domains.mcf import ArgsReceive, MgmtCommand
 from ..services.mcf_mgmt import AgentFactoryWrapper, Args
 
 router = APIRouter()
@@ -22,9 +19,9 @@ def receive_task(task_uid: str, mcf_service: AgentFactoryWrapper = Depends(get_a
 
 
 @router.get("/mcf/instances/", tags=['mcf_mgmt'])
-def receive_task(task_uid: str, mcf_service: AgentFactoryWrapper = Depends(get_agent_service)):
+def receive_task(mcf_service: AgentFactoryWrapper = Depends(get_agent_service)):
     try:
-        instances = {'instances': mcf_service.rs.agents_scope.keys()}
+        instances = {'instances': list(mcf_service.rs.agents_scope.keys())}
         return instances
     except Exception:
         raise HTTPException(status_code=404, detail=traceback.format_exc())

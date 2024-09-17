@@ -10,13 +10,12 @@ from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
 from cachetools import LRUCache
 from loguru import logger
+from copy import deepcopy
 from MetaCollector.base.utils.ind_logger.report import beauty_dict_report
+from MetaCollector.base.utils.selenium.factory import yaml_loader
 from MetaCollector.crawler.agent import CollectAgent
 
 logger.remove()
-logger.add(sys.stdout, colorize=True,
-           format='[{time:YYYY-MM-DD} {time:HH:mm:ss}][{file}.{function}:{line}][{level}] -> {message}',
-           filter=__name__, level="INFO")
 
 
 @dataclass
@@ -52,7 +51,7 @@ class AgentWrapper(object):
     def __init__(self, logger: any, args: Args):
         self._args = args
         self.logger = logger
-        self.cfg_content = json.loads(args.cfg)
+        self.cfg_content = yaml_loader(args.cfg)
         self.notify_content = None
         # noVNC forward process
         self.proc = None
@@ -62,11 +61,12 @@ class AgentWrapper(object):
         self.connect_to_remote_done = False
 
         agent = self.agent
-        print("加载配置文件中...")
+        logger.info("加载配置文件中...")
         if args.notify:
             agent.load_cfg_from_files(args.cfg, args.notify, args.debug)
         else:
             agent.load_cfg_from_files(args.cfg, debug_mode=args.debug)
+        logger.info("加载配置文件完毕")
 
         if args.all_notify:
             agent.enable_all_notify()
@@ -193,19 +193,28 @@ class AgentFactoryWrapper(object):
 
     def _job_new_instance(self, task_id: str, instance_id: str, cfg: Args):
         rs = self.rs
-        logger_child = logger.bind(instance_id=instance_id)
-        logger_child.add(f"instance_{instance_id}.log", filter=lambda record: record["extra"]["instance_id"] == instance_id)
-        agent = AgentWrapper(logger_child, cfg)
-        self.rs.agents_scope[instance_id] = agent
+        logger_child = deepcopy(logger)
+        logger_child.add(f"MCF_LOGS/instance_{instance_id}.log", colorize=True,
+                         format='[{time:YYYY-MM-DD} {time:HH:mm:ss}][{file}.{function}:{line}][{level}] -> {message}',
+                         level="INFO")
+        try:
+            logger_child.info(cfg)
+            agent = AgentWrapper(logger_child, cfg)
 
-        rs.current_tasks[task_id].status = 'Done'
-        rs.current_tasks[task_id].end_time = dt.now().strftime('%Y-%m-%d %H:%M:%S')
+            self.rs.agents_scope[instance_id] = agent
+
+            rs.current_tasks[task_id].status = 'Done'
+            rs.current_tasks[task_id].end_time = dt.now().strftime('%Y-%m-%d %H:%M:%S')
+        except Exception:
+            logger_child.error(traceback.format_exc())
 
     def _job_stop_instance(self, task_id: str, instance_id: str):
         rs = self.rs
 
         agent: AgentWrapper = self.rs.agents_scope[instance_id]
         agent.stop()
+
+        del rs.agents_scope[instance_id]
 
         rs.current_tasks[task_id].status = 'Done'
         rs.current_tasks[task_id].end_time = dt.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -300,7 +309,7 @@ class AgentFactoryWrapper(object):
         rs.pool.submit(self._job_launch_remote_chrome, task_id, instance_id, command)
         return {'task_id': task_id}
 
-    def run_driver(self, agent_tag: str, instance_id: str, cmd: str, cfg_input: dict):
+    def run_driver(self, agent_tag: str, instance_id: str, cmd: str, cfg_input: str):
         rs = self.rs
 
         task_id = str(uuid4())
@@ -310,6 +319,8 @@ class AgentFactoryWrapper(object):
                                                        status='Not Done',
                                                        start_time=dt.now().strftime('%Y-%m-%d %H:%M:%S'),
                                                        end_time=None)
+
+        cfg_input = yaml_loader(cfg_input)
 
         rs.pool.submit(self._job_run_driver, task_id, instance_id, cmd, cfg_input)
         return {'task_id': task_id}
