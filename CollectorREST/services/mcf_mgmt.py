@@ -2,6 +2,7 @@ import subprocess
 import traceback
 import psutil
 import sys
+import json
 from datetime import datetime as dt
 from uuid import uuid4
 from typing import Optional
@@ -10,7 +11,6 @@ from concurrent.futures import ThreadPoolExecutor
 from cachetools import LRUCache
 from loguru import logger
 from MetaCollector.base.utils.ind_logger.report import beauty_dict_report
-from MetaCollector.base.utils.selenium.factory import yaml_loader
 from MetaCollector.crawler.agent import CollectAgent
 
 logger.remove()
@@ -21,8 +21,10 @@ logger.add(sys.stdout, colorize=True,
 
 @dataclass
 class Args(object):
+    # json string
     cfg: str
     debug: str
+    # json string
     notify: Optional[str] = None
     xdisplay: Optional[bool] = None
     forward: Optional[int] = None
@@ -50,7 +52,8 @@ class AgentWrapper(object):
     def __init__(self, logger: any, args: Args):
         self._args = args
         self.logger = logger
-        self.cfg_content = yaml_loader(args.cfg)
+        self.cfg_content = json.loads(args.cfg)
+        self.notify_content = None
         # noVNC forward process
         self.proc = None
         self.xvfb_launch = False
@@ -61,9 +64,10 @@ class AgentWrapper(object):
         agent = self.agent
         print("加载配置文件中...")
         if args.notify:
-            agent.load_cfg_from_files(args.cfg, args.notify, args.debug)
+            self.notify_content = json.loads(args.notify)
+            agent.load_cfg_from_dict(self.cfg_content, self.notify_content, args.debug)
         else:
-            agent.load_cfg_from_files(args.cfg, debug_mode=args.debug)
+            agent.load_cfg_from_dict(self.cfg_content, debug_mode=args.debug)
 
         if args.all_notify:
             agent.enable_all_notify()
@@ -191,6 +195,7 @@ class AgentFactoryWrapper(object):
     def _job_new_instance(self, task_id: str, instance_id: str, cfg: Args):
         rs = self.rs
         logger_child = logger.bind(instance_id=instance_id)
+        logger_child.add(f"instance_{instance_id}.log", filter=lambda record: record["extra"]["instance_id"] == instance_id)
         agent = AgentWrapper(logger_child, cfg)
         self.rs.agents_scope[instance_id] = agent
 

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 from ..domains.tasks import SingleTaskReceive, BulkTasksReceive, TaskRowCreate
-from ..dependencies import get_queue_maintainer
+from ..dependencies import get_queue_maintainer, get_agent_service
 from ..repository import basic_crud_repository
 from ..database import SessionLocal
 from ..services.task_queue_maintainer import TaskQueueMaintainer
@@ -55,6 +55,7 @@ def get_current_queue_size(queue_m: TaskQueueMaintainer = Depends(get_queue_main
     return {'size': queue_m.queue.qsize()}
 
 
-@router.get('/queue/fetch_one', tags=['queue'])
-def get_task_from_queue(queue_m: TaskQueueMaintainer = Depends(get_queue_maintainer)):
-    return queue_m.get_task_from_queue()
+# @router.get('/queue/fetch_one', tags=['queue'])
+# def get_task_from_queue(queue_m: TaskQueueMaintainer = Depends(get_queue_maintainer)):
+#     return queue_m.get_task_from_queue()
+
