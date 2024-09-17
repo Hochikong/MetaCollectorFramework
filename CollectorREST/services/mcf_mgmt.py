@@ -23,10 +23,10 @@ logger.add(sys.stdout, colorize=True,
 class Args(object):
     cfg: str
     debug: str
-    notify: Optional[str]
-    xdisplay: Optional[bool]
-    forward: Optional[int]
-    all_notify: Optional[bool]
+    notify: Optional[str] = None
+    xdisplay: Optional[bool] = None
+    forward: Optional[int] = None
+    all_notify: Optional[bool] = None
 
     @classmethod
     def from_dict(cls, mapping: dict):
@@ -55,6 +55,8 @@ class AgentWrapper(object):
         self.proc = None
         self.xvfb_launch = False
         self.agent = CollectAgent()
+        # connect to remote chrome？
+        self.connect_to_remote_done = False
 
         agent = self.agent
         print("加载配置文件中...")
@@ -110,7 +112,7 @@ class AgentWrapper(object):
         agent = self.agent
         agent.hosted_instance.brow.get(url)
 
-    def launch_remote_chrome(self, command: str):
+    def launch_remote_chrome(self, command: str, connect_now: bool = False):
         agent = self.agent
         logger = self.logger
 
@@ -136,6 +138,12 @@ class AgentWrapper(object):
             except Exception:
                 logger.error(traceback.format_exc())
 
+        if connect_now:
+            # 启动完浏览器后直接连接chromedriver
+            logger.info("启动chromedriver")
+            agent.launch_for_drivers()
+            self.connect_to_remote_done = True
+
     def run_driver(self, command: str, cfg_input: dict = None):
         agent = self.agent
         logger = self.logger
@@ -143,8 +151,9 @@ class AgentWrapper(object):
         if cfg_input is None:
             cfg_input = self.cfg_content
 
-        logger.info("启动chromedriver")
-        agent.launch_for_drivers()
+        if not self.connect_to_remote_done:
+            logger.info("启动chromedriver")
+            agent.launch_for_drivers()
 
         namespace_dr = command.split(";")[-1]
         ns = namespace_dr.split(":")[0]
@@ -179,7 +188,7 @@ class AgentFactoryWrapper(object):
     def __init__(self):
         self.rs = RuntimeStorage()
 
-    def _job_new_instance(self, task_id: str, instance_id: str, logger: any, cfg: Args):
+    def _job_new_instance(self, task_id: str, instance_id: str, cfg: Args):
         rs = self.rs
         logger_child = logger.bind(instance_id=instance_id)
         agent = AgentWrapper(logger_child, cfg)
@@ -242,7 +251,7 @@ class AgentFactoryWrapper(object):
                                                        status='Not Done',
                                                        start_time=dt.now().strftime('%Y-%m-%d %H:%M:%S'),
                                                        end_time=None)
-        rs.pool.submit(self._job_new_instance, task_id, instance_id, self.logger, cfg)
+        rs.pool.submit(self._job_new_instance, task_id, instance_id, cfg)
         return {'task_id': task_id}
 
     def stop_agent(self, agent_tag: str, instance_id: str):
