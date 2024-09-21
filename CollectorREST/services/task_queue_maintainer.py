@@ -1,15 +1,33 @@
+import concurrent
+import time
 from queue import Queue
-from fastapi import Depends
 from sqlalchemy.orm import Session
-from ..repository.basic_crud_repository import get_tasks_by_status, update_task_status
 
 from ..database import SessionLocal
+from ..repository.basic_crud_repository import get_tasks_by_status, update_task_status
 
 
 class TaskQueueMaintainer:
     def __init__(self, logger: any):
         self.logger = logger
         self.queue = Queue(maxsize=0)
+        self.stop_flag = False
+        self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        self.future = self.pool.submit(self._load_pending_tasks_periodically)
+
+    def _load_pending_tasks_periodically(self):
+        logger = self.logger
+        while True:
+            if self.stop_flag:
+                logger.info("Stop periodic tasks")
+                break
+            elif self.stop_flag is False and self.queue.empty():
+                logger.info("Start to load tasks from db")
+                self.load_pending_tasks_from_db()
+            else:
+                # 10mins
+                logger.info("Skip to load tasks from db")
+                time.sleep(5)
 
     def load_pending_tasks_from_db(self):
         logger = self.logger
@@ -48,3 +66,7 @@ class TaskQueueMaintainer:
             return {'driver_info': 'EMPTY', 'tasks': []}
         else:
             return queue.get(timeout=5)
+
+    def stop_pool(self):
+        self.stop_flag = True
+        self.pool.shutdown(wait=True)

@@ -55,7 +55,12 @@ def get_current_queue_size(queue_m: TaskQueueMaintainer = Depends(get_queue_main
     return {'size': queue_m.queue.qsize()}
 
 
-# @router.get('/queue/fetch_one', tags=['queue'])
-# def get_task_from_queue(queue_m: TaskQueueMaintainer = Depends(get_queue_maintainer)):
-#     return queue_m.get_task_from_queue()
+@router.get('/queue/stop_periodic_tasks', tags=['queue'])
+def stop_peri(queue_m: TaskQueueMaintainer = Depends(get_queue_maintainer)):
+    queue_m.stop_pool()
+    return {'status': True}
 
+
+@router.get('/queue/pop_one', tags=['queue'])
+def get_task_from_queue(queue_m: TaskQueueMaintainer = Depends(get_queue_maintainer)):
+    return queue_m.get_task_from_queue()

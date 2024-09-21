@@ -1,16 +1,16 @@
 import subprocess
 import traceback
-import psutil
-import sys
-import json
-from datetime import datetime as dt
-from uuid import uuid4
-from typing import Optional
-from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
+from dataclasses import dataclass
+from datetime import datetime as dt
+from typing import Optional
+from uuid import uuid4
+
+import psutil
 from cachetools import LRUCache
 from loguru import logger
-from copy import deepcopy
+
 from MetaCollector.base.utils.ind_logger.report import beauty_dict_report
 from MetaCollector.base.utils.selenium.factory import yaml_loader
 from MetaCollector.crawler.agent import CollectAgent
