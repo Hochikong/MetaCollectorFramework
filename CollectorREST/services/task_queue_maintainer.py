@@ -1,10 +1,15 @@
 import concurrent
+import datetime
+import os
 import time
+from copy import deepcopy
 from queue import Queue
 from sqlalchemy.orm import Session
-
+from MetaCollector.base.utils.selenium.factory import yaml_loader, yaml_writer
 from ..database import SessionLocal
 from ..repository.basic_crud_repository import get_tasks_by_status, update_task_status
+from ..app_config import TASK_TEMPLATE_CONFIG as template_config_path
+from ..app_config import TEMPORARY_CONFIG_DIR
 
 
 class TaskQueueMaintainer:
@@ -14,6 +19,7 @@ class TaskQueueMaintainer:
         self.stop_flag = False
         self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         self.future = self.pool.submit(self._load_pending_tasks_periodically)
+        self.template = yaml_loader(template_config_path)
 
     def _load_pending_tasks_periodically(self):
         logger = self.logger
@@ -39,7 +45,15 @@ class TaskQueueMaintainer:
         driver_infos = set([i.driver_info for i in tasks])
         tasks_group_by_driver = []
         for driver_info in driver_infos:
-            tmp = {'driver_info': driver_info, 'tasks': [i for i in tasks if i.driver_info == driver_info]}
+            tasks = [i for i in tasks if i.driver_info == driver_info]
+
+            author = f"{driver_info}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            template = deepcopy(self.template)
+            template['targets'] = tasks
+            cfg_path = f"{TEMPORARY_CONFIG_DIR}{os.sep}{author}.yaml"
+            yaml_writer(cfg_path, template)
+
+            tmp = {'driver_info': driver_info, 'tasks': tasks, 'cfg_path': cfg_path}
             tasks_group_by_driver.append(tmp)
 
         logger.info(f"Current size before -> {self.queue.qsize()}")

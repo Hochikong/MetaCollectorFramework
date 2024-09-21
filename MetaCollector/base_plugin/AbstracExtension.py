@@ -64,3 +64,13 @@ class AbstractDriver(metaclass=ABCMeta):
         :return:
         """
         pass
+
+    @abstractmethod
+    def get_plugin_info(self) -> dict:
+        """
+        获取插件的相关信息统计，具体内容由插件自身实现
+
+        :param on:
+        :return:
+        """
+        pass

@@ -147,7 +147,7 @@ class AgentWrapper(object):
             agent.launch_for_drivers()
             self.connect_to_remote_done = True
 
-    def run_driver(self, command: str, cfg_input: dict = None):
+    def run_driver(self, command: str, cfg_input: dict = None) -> dict:
         agent = self.agent
         logger = self.logger
 
@@ -177,6 +177,9 @@ class AgentWrapper(object):
         else:
             logger.info("run已执行全部模块")
             logger.info(f"取数任务完成, 统计报告如下：\n\n{beauty_dict_report(run_results)}")
+
+        run_stats = agent.driver_mgr.driver.get_plugin_info()
+        return run_stats
 
 
 class RuntimeStorage(object):
@@ -244,10 +247,12 @@ class AgentFactoryWrapper(object):
         rs = self.rs
 
         agent: AgentWrapper = self.rs.agents_scope[instance_id]
-        agent.run_driver(cmd, cfg_input)
+        stats = agent.run_driver(cmd, cfg_input)
 
         rs.current_tasks[task_id].status = 'Done'
         rs.current_tasks[task_id].end_time = dt.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        rs.task_results[task_id] = stats
 
     def create_agent(self, agent_tag: str, cfg: Args):
         rs = self.rs

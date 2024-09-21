@@ -2,7 +2,7 @@ import traceback
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from ..dependencies import get_agent_service
+from ..dependencies import get_agent_service, get_mcf_config_path
 from ..domains.mcf import ArgsReceive, MgmtCommand
 from ..services.mcf_mgmt import AgentFactoryWrapper, Args
 
@@ -13,6 +13,14 @@ router = APIRouter()
 def receive_task(task_uid: str, mcf_service: AgentFactoryWrapper = Depends(get_agent_service)):
     try:
         task_info: dict = mcf_service.rs.current_tasks[task_uid]
+        return task_info
+    except Exception:
+        raise HTTPException(status_code=404, detail=traceback.format_exc())
+
+@router.get("/mcf/results/{task_uid}", tags=['mcf_mgmt'])
+def receive_task(task_uid: str, mcf_service: AgentFactoryWrapper = Depends(get_agent_service)):
+    try:
+        task_info: dict = mcf_service.rs.task_results[task_uid]
         return task_info
     except Exception:
         raise HTTPException(status_code=404, detail=traceback.format_exc())
@@ -53,8 +61,13 @@ def receive_task(instance_id: str, cmd: MgmtCommand, mcf_service: AgentFactoryWr
 
 @router.post("/mcf/run_driver/{instance_id}", tags=['mcf_mgmt'])
 def receive_task(instance_id: str, cmd: MgmtCommand, mcf_service: AgentFactoryWrapper = Depends(get_agent_service)):
+    if cmd.cfg_input is None:
+        mcf_cfg, _ = Depends(get_mcf_config_path)
+    else:
+        mcf_cfg = cmd.cfg_input
+
     try:
-        task_id = mcf_service.run_driver('system', instance_id, cmd.cmd, cmd.cfg_input)
+        task_id = mcf_service.run_driver('system', instance_id, cmd.cmd, mcf_cfg)
         return task_id
     except Exception:
         raise HTTPException(status_code=404, detail=traceback.format_exc())
