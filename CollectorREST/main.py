@@ -7,7 +7,7 @@ import os
 
 from fastapi import FastAPI, Depends
 
-from app_config import *
+from .app_config import *
 from .database import engine
 from .entities import db_entity
 
@@ -38,3 +38,5 @@ logger.info("Queue Maintainer init done!")
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+# uvicorn CollectorREST.main:app --reload --log-config .\uvicorn_conf.yaml

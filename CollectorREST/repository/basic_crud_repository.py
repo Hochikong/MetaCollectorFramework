@@ -19,7 +19,7 @@ def get_tasks(db: Session, skip: int = 0, limit: int = 100) -> List[db_entity.Ta
 
 
 def create_task(db: Session, task_params: tasks.TaskRowCreate) -> bool:
-    new_task = db_entity.TaskListEntity(**task_params.model_dump(), deleted_at=datetime.datetime(2077, 1, 1, 8, 0, 0,0))
+    new_task = db_entity.TaskListEntity(**task_params.dict(), deleted_at=datetime.datetime(2077, 1, 1, 8, 0, 0, 0))
     db.add(new_task)
     db.commit()
     db.refresh(new_task)

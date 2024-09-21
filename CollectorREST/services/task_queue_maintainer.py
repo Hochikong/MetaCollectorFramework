@@ -2,6 +2,7 @@ import concurrent
 import datetime
 import os
 import time
+import hashlib
 from copy import deepcopy
 from queue import Queue
 from sqlalchemy.orm import Session
@@ -30,10 +31,11 @@ class TaskQueueMaintainer:
             elif self.stop_flag is False and self.queue.empty():
                 logger.info("Start to load tasks from db")
                 self.load_pending_tasks_from_db()
+                time.sleep(60)
             else:
                 # 10mins
                 logger.info("Skip to load tasks from db")
-                time.sleep(5)
+                time.sleep(20)
 
     def load_pending_tasks_from_db(self):
         logger = self.logger
@@ -49,8 +51,11 @@ class TaskQueueMaintainer:
 
             author = f"{driver_info}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
             template = deepcopy(self.template)
-            template['targets'] = tasks
-            cfg_path = f"{TEMPORARY_CONFIG_DIR}{os.sep}{author}.yaml"
+            template['author'] = author
+            template['targets'] = [t.task_content for t in tasks]
+            hashcode_text = ','.join(template['targets'])
+            hashcode = hashlib.md5(hashcode_text.encode('utf-8')).hexdigest()
+            cfg_path = f"{TEMPORARY_CONFIG_DIR}{os.sep}{hashcode}.yaml"
             yaml_writer(cfg_path, template)
 
             tmp = {'driver_info': driver_info, 'tasks': tasks, 'cfg_path': cfg_path}
