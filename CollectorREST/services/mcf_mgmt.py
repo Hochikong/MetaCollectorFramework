@@ -200,15 +200,18 @@ class AgentFactoryWrapper(object):
         logger_child.add(f"MCF_LOGS/instance_{instance_id}.log", colorize=True,
                          format='[{time:YYYY-MM-DD} {time:HH:mm:ss}][{file}.{function}:{line}][{level}] -> {message}',
                          level="INFO")
+        print('fuck')
         try:
             logger_child.info(cfg)
             agent = AgentWrapper(logger_child, cfg)
-
+            print(instance_id)
             self.rs.agents_scope[instance_id] = agent
-
+            print("create done")
             rs.current_tasks[task_id].status = 'Done'
             rs.current_tasks[task_id].end_time = dt.now().strftime('%Y-%m-%d %H:%M:%S')
-        except Exception:
+        except Exception as e:
+            print(e)
+            print(traceback.format_exc())
             logger_child.error(traceback.format_exc())
 
     def _job_stop_instance(self, task_id: str, instance_id: str):
@@ -254,7 +257,7 @@ class AgentFactoryWrapper(object):
 
         rs.task_results[task_id] = stats
 
-    def create_agent(self, agent_tag: str, cfg: Args):
+    def create_agent(self, agent_tag: str, cfg: Args, not_pool: bool = False):
         rs = self.rs
 
         if list(rs.agents_scope.keys()) == 0:
@@ -269,10 +272,14 @@ class AgentFactoryWrapper(object):
                                                        status='Not Done',
                                                        start_time=dt.now().strftime('%Y-%m-%d %H:%M:%S'),
                                                        end_time=None)
-        rs.pool.submit(self._job_new_instance, task_id, instance_id, cfg)
-        return {'task_id': task_id}
+        if not_pool:
+            self._job_new_instance(task_id, instance_id, cfg)
+        else:
+            rs.pool.submit(self._job_new_instance, task_id, instance_id, cfg)
 
-    def stop_agent(self, agent_tag: str, instance_id: str):
+        return {'task_id': task_id, 'instance_id': instance_id}
+
+    def stop_agent(self, agent_tag: str, instance_id: str, not_pool=False):
         rs = self.rs
 
         task_id = str(uuid4())
@@ -284,9 +291,15 @@ class AgentFactoryWrapper(object):
                                                        end_time=None)
 
         rs.pool.submit(self._job_stop_instance, task_id, instance_id)
+
+        if not_pool:
+            self._job_stop_instance(task_id, instance_id)
+        else:
+            rs.pool.submit(self._job_stop_instance, task_id, instance_id)
+
         return {'task_id': task_id}
 
-    def goto_url(self, agent_tag: str, instance_id: str, url: str = None):
+    def goto_url(self, agent_tag: str, instance_id: str, url: str = None, not_pool: bool = False):
         rs = self.rs
 
         task_id = str(uuid4())
@@ -297,10 +310,13 @@ class AgentFactoryWrapper(object):
                                                        start_time=dt.now().strftime('%Y-%m-%d %H:%M:%S'),
                                                        end_time=None)
 
-        rs.pool.submit(self._job_goto_url, task_id, instance_id, url)
+        if not_pool:
+            self._job_goto_url(task_id, instance_id, url)
+        else:
+            rs.pool.submit(self._job_goto_url, task_id, instance_id, url)
         return {'task_id': task_id}
 
-    def launch_remote_chrome(self, agent_tag: str, instance_id: str, command: str):
+    def launch_remote_chrome(self, agent_tag: str, instance_id: str, command: str, not_pool: bool = False):
         rs = self.rs
 
         task_id = str(uuid4())
@@ -311,10 +327,13 @@ class AgentFactoryWrapper(object):
                                                        start_time=dt.now().strftime('%Y-%m-%d %H:%M:%S'),
                                                        end_time=None)
 
-        rs.pool.submit(self._job_launch_remote_chrome, task_id, instance_id, command)
+        if not_pool:
+            self._job_launch_remote_chrome(task_id, instance_id, command)
+        else:
+            rs.pool.submit(self._job_launch_remote_chrome, task_id, instance_id, command)
         return {'task_id': task_id}
 
-    def run_driver(self, agent_tag: str, instance_id: str, cmd: str, cfg_input: str):
+    def run_driver(self, agent_tag: str, instance_id: str, cmd: str, cfg_input: str, not_pool: bool = False):
         rs = self.rs
 
         task_id = str(uuid4())
@@ -327,5 +346,8 @@ class AgentFactoryWrapper(object):
 
         cfg_input = yaml_loader(cfg_input)
 
-        rs.pool.submit(self._job_run_driver, task_id, instance_id, cmd, cfg_input)
+        if not_pool:
+            self._job_run_driver(task_id, instance_id, cmd, cfg_input)
+        else:
+            rs.pool.submit(self._job_run_driver, task_id, instance_id, cmd, cfg_input)
         return {'task_id': task_id}

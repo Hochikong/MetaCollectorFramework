@@ -11,7 +11,7 @@ from .app_config import *
 from .database import engine
 from .entities import db_entity
 
-# region Init
+# region Init1
 # from uvicorn.server import logger
 logger = logging.getLogger('main_app')
 db_entity.Base.metadata.create_all(bind=engine)
@@ -25,14 +25,11 @@ else:
 # endregion
 
 from .controller import tasks_controller, mcf_controller
-from .dependencies import get_queue_maintainer, get_agent_service
+from .dependencies import get_queue_maintainer, get_agent_service, get_main_mcf
 
-app = FastAPI(dependencies=[Depends(get_queue_maintainer), Depends(get_agent_service)])
+app = FastAPI(dependencies=[Depends(get_queue_maintainer), Depends(get_agent_service), Depends(get_main_mcf)])
 app.include_router(tasks_controller.router)
 app.include_router(mcf_controller.router)
-
-queue_m = get_queue_maintainer()
-logger.info("Queue Maintainer init done!")
 
 
 @app.get("/")
