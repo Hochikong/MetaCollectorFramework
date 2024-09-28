@@ -21,6 +21,7 @@ class TaskRowCreate(BaseModel):
     task_content: str
     task_status: int
     driver_info: str
+    attach_cfg_key: str = None
 
     class Config:
         from_attributes = True

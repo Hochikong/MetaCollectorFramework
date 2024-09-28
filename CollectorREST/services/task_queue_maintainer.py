@@ -50,15 +50,18 @@ class TaskQueueMaintainer:
             tasks = [i for i in tasks if i.driver_info == driver_info]
 
             author = f"{driver_info}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            author = author.replace(":", "-")
             template = deepcopy(self.template)
             template['author'] = author
             template['targets'] = [t.task_content for t in tasks]
+            same_attach_cfg_key = tasks[0].attach_cfg_key
             hashcode_text = ','.join(template['targets'])
             hashcode = hashlib.md5(hashcode_text.encode('utf-8')).hexdigest()
             cfg_path = f"{TEMPORARY_CONFIG_DIR}{os.sep}{hashcode}.yaml"
             yaml_writer(cfg_path, template)
 
-            tmp = {'driver_info': driver_info, 'tasks': tasks, 'cfg_path': cfg_path}
+            tmp = {'driver_info': driver_info, 'tasks': tasks, 'cfg_path': cfg_path,
+                   'attach_cfg_key': same_attach_cfg_key}
             tasks_group_by_driver.append(tmp)
 
         logger.info(f"Current size before -> {self.queue.qsize()}")
@@ -69,11 +72,18 @@ class TaskQueueMaintainer:
 
         db_session.close()
 
-    def update_task_status_by_uuid(self, uid: str, status: int):
+    def update_task_status_by_uuid(self, task_uid: str, status: int):
+        """
+        status：PENDING -> 3 / ONGOING -> 0 / DONE -> 1 / ERROR -> 2
+
+        :param task_uid:
+        :param status:
+        :return:
+        """
         logger = self.logger
         db_session: Session = SessionLocal()
-        update_task_status(db_session, uid, status)
-        logger.info(f"Updated status of task {uid} to {status}")
+        update_task_status(db_session, task_uid, status)
+        logger.info(f"Updated status of url task {task_uid} to {status}")
         db_session.close()
 
     def get_task_from_queue(self):

@@ -7,11 +7,13 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
+from djsplugins.MCF.collector_rest_utils.middleware import CollectorRESTMiddleware
 from ..domains.tasks import SingleTaskReceive, BulkTasksReceive, TaskRowCreate
-from ..dependencies import get_queue_maintainer, get_agent_service
+from ..dependencies import get_queue_maintainer, get_main_mcf
 from ..repository import basic_crud_repository
 from ..database import SessionLocal
 from ..services.task_queue_maintainer import TaskQueueMaintainer
+from ..services.main_mcf_holder import MainMCF
 
 router = APIRouter()
 
@@ -24,12 +26,20 @@ def get_db():
         db.close()
 
 
+drivers_router = CollectorRESTMiddleware()
+drivers_router.prepare(None, {})
+
+
 @router.post("/tasks/single/", tags=['tasks'])
 def receive_task(task: SingleTaskReceive, db: Session = Depends(get_db)):
-    created_task = TaskRowCreate(task_uid=str(uuid.uuid4()), task_content=task.url, task_status=3,
-                                 driver_info='test_driver')
-    status = basic_crud_repository.create_task(db, created_task)
-    return {'status': status}
+    total_status = False
+    driver_info = drivers_router.get_router_output(task.url)
+    for info in driver_info:
+        created_task = TaskRowCreate(task_uid=str(uuid.uuid4()), task_content=task.url, task_status=3,
+                                     driver_info=info['driver'], attach_cfg_key=info['attach_cfg_key'])
+        status = basic_crud_repository.create_task(db, created_task)
+        total_status = status
+    return {'status': total_status}
 
 
 @router.post("/tasks/bulk/", tags=['tasks'])
@@ -56,8 +66,10 @@ def get_current_queue_size(queue_m: TaskQueueMaintainer = Depends(get_queue_main
 
 
 @router.get('/queue/stop_periodic_tasks', tags=['queue'])
-def stop_peri(queue_m: TaskQueueMaintainer = Depends(get_queue_maintainer)):
+def stop_periodic_task(queue_m: TaskQueueMaintainer = Depends(get_queue_maintainer),
+                       main_mcf: MainMCF = Depends(get_main_mcf)):
     queue_m.stop_pool()
+    main_mcf.stop_pool()
     return {'status': True}
 
 

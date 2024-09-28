@@ -25,4 +25,5 @@ class TaskListEntity(Base, BaseMixin):
     task_status = Column(Integer)
     # 本任务使用什么驱动程序执行
     driver_info = Column(String(50))
-
+    # 附加的配置文件key
+    attach_cfg_key = Column(String(100))

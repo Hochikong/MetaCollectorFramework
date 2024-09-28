@@ -193,17 +193,17 @@ class RuntimeStorage(object):
 class AgentFactoryWrapper(object):
     def __init__(self):
         self.rs = RuntimeStorage()
+        self.logger_child = None
 
     def _job_new_instance(self, task_id: str, instance_id: str, cfg: Args):
         rs = self.rs
-        logger_child = deepcopy(logger)
-        logger_child.add(f"MCF_LOGS/instance_{instance_id}.log", colorize=True,
-                         format='[{time:YYYY-MM-DD} {time:HH:mm:ss}][{file}.{function}:{line}][{level}] -> {message}',
-                         level="INFO")
-        print('fuck')
+        self.logger_child = deepcopy(logger)
+        self.logger_child.add(f"MCF_LOGS/instance_{instance_id}.log", colorize=True,
+                              format='[{time:YYYY-MM-DD} {time:HH:mm:ss}][{file}.{function}:{line}][{level}] -> {message}',
+                              level="INFO")
         try:
-            logger_child.info(cfg)
-            agent = AgentWrapper(logger_child, cfg)
+            self.logger_child.info(cfg)
+            agent = AgentWrapper(self.logger_child, cfg)
             print(instance_id)
             self.rs.agents_scope[instance_id] = agent
             print("create done")
@@ -212,7 +212,7 @@ class AgentFactoryWrapper(object):
         except Exception as e:
             print(e)
             print(traceback.format_exc())
-            logger_child.error(traceback.format_exc())
+            self.logger_child.error(traceback.format_exc())
 
     def _job_stop_instance(self, task_id: str, instance_id: str):
         rs = self.rs
@@ -256,6 +256,7 @@ class AgentFactoryWrapper(object):
         rs.current_tasks[task_id].end_time = dt.now().strftime('%Y-%m-%d %H:%M:%S')
 
         rs.task_results[task_id] = stats
+        self.logger_child.info(f"已完成的任务: {stats}")
 
     def create_agent(self, agent_tag: str, cfg: Args, not_pool: bool = False):
         rs = self.rs
