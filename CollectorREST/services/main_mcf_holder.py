@@ -66,6 +66,9 @@ class MainMCF(object):
         queue_m = self.queue_maintainer
         agent_service = self.agent_service
 
+        # wait for chrome ready
+        time.sleep(300)
+
         while True:
             if self.stop_flag:
                 logger.info("Stop queue consumer periodic task")

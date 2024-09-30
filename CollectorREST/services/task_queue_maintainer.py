@@ -3,6 +3,7 @@ import os
 import time
 import hashlib
 import concurrent.futures
+import traceback
 from copy import deepcopy
 from queue import Queue
 from sqlalchemy.orm import Session
@@ -25,17 +26,21 @@ class TaskQueueMaintainer:
     def _load_pending_tasks_periodically(self):
         logger = self.logger
         while True:
-            if self.stop_flag:
-                logger.info("Stop periodic tasks")
-                break
-            elif self.stop_flag is False and self.queue.empty():
-                logger.info("Start to load tasks from db")
-                self.load_pending_tasks_from_db()
-                time.sleep(60)
-            else:
-                # 10mins
-                logger.info("Skip to load tasks from db")
-                time.sleep(20)
+            try:
+                if self.stop_flag:
+                    logger.info("Stop periodic tasks")
+                    break
+                elif self.stop_flag is False and self.queue.empty():
+                    logger.info("Start to load tasks from db")
+                    self.load_pending_tasks_from_db()
+                    time.sleep(60)
+                else:
+                    # 10mins
+                    logger.info("Skip to load tasks from db")
+                    time.sleep(20)
+            except Exception:
+                logger.warning(traceback.format_exc())
+                time.sleep(30)
 
     def load_pending_tasks_from_db(self):
         logger = self.logger
