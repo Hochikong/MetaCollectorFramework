@@ -136,7 +136,7 @@ class MainMCF(object):
 
                                 done = True
                             except KeyError:
-                                logger.error(traceback.format_exc())
+                                logger.warning(traceback.format_exc())
                                 time.sleep(30)
                                 continue
 
