@@ -5,6 +5,7 @@
     const port = (await chrome.storage.sync.get('port')).port;
     const server = (await chrome.storage.sync.get('server')).server;
     const secure = (await chrome.storage.sync.get('secure')).secure;
+    const endpoint = (await chrome.storage.sync.get('endpoint')).endpoint;
     // chrome.tabs.update({
     //   url: `http${secure ? 's' : ''}://localhost:${port ?? '3000'}${
     //     url.pathname
@@ -12,7 +13,7 @@
     let data = {
         url: url
     };
-    const surl = `http${secure ? 's' : ''}://${server ?? 'localhost'}:${port ?? '3000'}`
+    const surl = `http${secure ? 's' : ''}://${server ?? 'localhost'}:${port ?? '3000'}${endpoint}`
     fetch(surl, {
         method: 'POST',
         headers: {

@@ -31,11 +31,12 @@ function sendPostRequest() {
     const server = (chrome.storage.sync.get('server')).server;
     const port = (chrome.storage.sync.get('port')).port;
     const secure = (chrome.storage.sync.get('secure')).secure;
+        const endpoint = (chrome.storage.sync.get('endpoint')).endpoint;
 
     let sendData = {
         url: url
     };
-    const surl = `http${secure ? 's' : ''}://${server ?? 'localhost'}:${port ?? '3000'}`
+        const surl = `http${secure ? 's' : ''}://${server ?? 'localhost'}:${port ?? '3000'}${endpoint}`;
 
     fetch(surl, {
         method: 'POST',
