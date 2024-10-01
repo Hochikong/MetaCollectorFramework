@@ -104,7 +104,6 @@ class MainMCF(object):
                         logger.info("Task submit done")
                         self.task_id_queue.put({'task_rows': task_rows, 'task_id': task_id})
                         time.sleep(60)
-                        self.mcf_lock = False
                     else:
                         time.sleep(30)
                         continue
@@ -144,6 +143,7 @@ class MainMCF(object):
                                         queue_m.update_task_status_by_uuid(tr.task_uid, 2)
 
                                 done = True
+                                self.mcf_lock = False
                             except KeyError:
                                 # logger.warning(traceback.format_exc())
                                 time.sleep(30)
