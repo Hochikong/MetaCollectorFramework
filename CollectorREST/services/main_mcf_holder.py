@@ -86,7 +86,7 @@ class MainMCF(object):
                     task = queue_m.get_task_from_queue()
                     driver_info_and_cmd_param = task['driver_info']
                     if driver_info_and_cmd_param != 'EMPTY' and len(task['tasks']) > 0:
-
+                        self.mcf_lock = True
                         # set all task ongoing
                         task_rows = task['tasks']
                         for tr in task_rows:
@@ -104,6 +104,7 @@ class MainMCF(object):
                         logger.info("Task submit done")
                         self.task_id_queue.put({'task_rows': task_rows, 'task_id': task_id})
                         time.sleep(60)
+                        self.mcf_lock = False
                     else:
                         time.sleep(30)
                         continue
