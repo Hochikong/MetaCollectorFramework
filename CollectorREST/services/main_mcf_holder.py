@@ -24,6 +24,7 @@ class MainMCF(object):
         self.common_pool = concurrent.futures.ThreadPoolExecutor(max_workers=2)
         self.task_id_queue = Queue(maxsize=0)
         self.stop_flag = False
+        self.mcf_lock = False
 
         agent_service = self.agent_service
         task = agent_service.create_agent('main', Args(MCF_CONFIG, 'yes'), not_pool=True)
@@ -67,9 +68,16 @@ class MainMCF(object):
         agent_service = self.agent_service
 
         # wait for chrome ready
-        time.sleep(300)
+        time.sleep(180)
 
         while True:
+            if self.mcf_lock is True:
+                logger.info("MainMCF currently is locked")
+                time.sleep(60)
+                continue
+            else:
+                logger.info("MainMCF currently is unlocked")
+
             if self.stop_flag:
                 logger.info("Stop queue consumer periodic task")
                 break
@@ -136,7 +144,7 @@ class MainMCF(object):
 
                                 done = True
                             except KeyError:
-                                logger.warning(traceback.format_exc())
+                                # logger.warning(traceback.format_exc())
                                 time.sleep(30)
                                 continue
 
