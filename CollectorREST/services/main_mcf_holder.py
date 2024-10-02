@@ -68,7 +68,7 @@ class MainMCF(object):
         agent_service = self.agent_service
 
         # wait for chrome ready
-        time.sleep(180)
+        time.sleep(300)
 
         while True:
             if self.mcf_lock is True:
