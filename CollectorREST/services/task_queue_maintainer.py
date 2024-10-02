@@ -54,7 +54,7 @@ class TaskQueueMaintainer:
         for driver_info in driver_infos:
             tasks = [i for i in tasks if i.driver_info == driver_info]
 
-            author = f"{driver_info}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            author = f"{driver_info}_{datetime.datetime.now().strftime('%Y%m%d_%H')}"
             author = author.replace(":", "-")
             template = deepcopy(self.template)
             template['author'] = author
