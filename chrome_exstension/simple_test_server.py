@@ -6,7 +6,8 @@ from fastapi import FastAPI
 from typing import Dict, Any
 app = FastAPI()
 
-@app.post("/")
+
+@app.post("/tasks/single/")
 def receive_post(request: Dict[Any, Any]):
     print(request)
     return {"message": "Data received successfully"}
