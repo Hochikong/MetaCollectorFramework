@@ -13,6 +13,8 @@ class BaseMixin:
                         index=True)
     deleted_at = Column(DateTime)
 
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
 
 class TaskListEntity(Base, BaseMixin):
     __tablename__ = "tasks_list"
@@ -27,3 +29,5 @@ class TaskListEntity(Base, BaseMixin):
     driver_info = Column(String(50))
     # 附加的配置文件key
     attach_cfg_key = Column(String(100))
+
+    __table_args__ = {'mysql_engine': 'InnoDB'}
