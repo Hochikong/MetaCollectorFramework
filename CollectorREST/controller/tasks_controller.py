@@ -43,8 +43,16 @@ def receive_task(task: SingleTaskReceive, db: Session = Depends(get_db)):
 
 
 @router.post("/tasks/bulk/", tags=['tasks'])
-def receive_tasks(tasks: BulkTasksReceive):
-    return tasks
+def receive_tasks(tasks: BulkTasksReceive, db: Session = Depends(get_db)):
+    total_status = False
+    for url in tasks.urls:
+        driver_info = drivers_router.get_router_output(url)
+        for info in driver_info:
+            created_task = TaskRowCreate(task_uid=str(uuid.uuid4()), task_content=url, task_status=3,
+                                         driver_info=info['driver'], attach_cfg_key=info['attach_cfg_key'])
+            status = basic_crud_repository.create_task(db, created_task)
+            total_status = status
+    return {'status': total_status}
 
 
 @router.get('/tasks/{uid}', tags=['tasks'])
