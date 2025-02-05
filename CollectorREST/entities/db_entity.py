@@ -29,5 +29,7 @@ class TaskListEntity(Base, BaseMixin):
     driver_info = Column(String(50))
     # 附加的配置文件key
     attach_cfg_key = Column(String(100))
+    # 自定义下载子目录，只会在原有模板目录后追加子目录
+    download_dir = Column(String(100))
 
     __table_args__ = {'mysql_engine': 'InnoDB'}

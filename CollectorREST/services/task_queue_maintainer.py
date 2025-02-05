@@ -59,6 +59,16 @@ class TaskQueueMaintainer:
             template = deepcopy(self.template)
             template['author'] = author
             template['targets'] = [t.task_content for t in tasks]
+
+            # 指定子目录下载
+            download_child_dir = tasks[0].download_dir
+            if isinstance(download_child_dir, str):
+                if len(download_child_dir) > 0:
+                    if template['target_save_dir'].endswith(os.sep):
+                        template['target_save_dir'] += (download_child_dir + os.sep)
+                    else:
+                        template['target_save_dir'] += (os.sep + download_child_dir + os.sep)
+
             same_attach_cfg_key = tasks[0].attach_cfg_key
             hashcode_text = ','.join(template['targets'])
             hashcode = hashlib.md5(hashcode_text.encode('utf-8')).hexdigest()

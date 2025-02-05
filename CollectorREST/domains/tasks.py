@@ -14,6 +14,7 @@ class SingleTaskReceive(BaseModel):
 
 class BulkTasksReceive(BaseModel):
     urls: List[str]
+    params: dict
 
 
 class TaskRowCreate(BaseModel):
@@ -22,6 +23,7 @@ class TaskRowCreate(BaseModel):
     task_status: int
     driver_info: str
     attach_cfg_key: str = None
+    download_dir: str = None
 
     class Config:
         from_attributes = True
