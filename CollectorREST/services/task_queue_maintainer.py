@@ -54,30 +54,50 @@ class TaskQueueMaintainer:
         for driver_info in driver_infos:
             tasks = [i for i in tasks if i.driver_info == driver_info]
 
-            author = f"{driver_info}_{datetime.datetime.now().strftime('%Y%m%d_%H')}"
-            author = author.replace(":", "-")
-            template = deepcopy(self.template)
-            template['author'] = author
-            template['targets'] = [t.task_content for t in tasks]
+            # 不指定子下载目录的任务
+            no_child_dirs_tasks = [t for t in tasks if t.download_dir is None]
+            if len(no_child_dirs_tasks) > 0:
+                author = f"{driver_info}_{datetime.datetime.now().strftime('%Y%m%d_%H')}"
+                author = author.replace(":", "-")
+                template = deepcopy(self.template)
+                template['author'] = author
+                template['targets'] = [t.task_content for t in no_child_dirs_tasks]
 
-            # 指定子目录下载
-            download_child_dir = tasks[0].download_dir
-            if isinstance(download_child_dir, str):
-                if len(download_child_dir) > 0:
+                same_attach_cfg_key = tasks[0].attach_cfg_key
+                hashcode_text = ','.join(template['targets'])
+                hashcode = hashlib.md5(hashcode_text.encode('utf-8')).hexdigest()
+                cfg_path = f"{TEMPORARY_CONFIG_DIR}{os.sep}{hashcode}.yaml"
+                yaml_writer(cfg_path, template)
+
+                tmp = {'driver_info': driver_info, 'tasks': no_child_dirs_tasks, 'cfg_path': cfg_path,
+                       'attach_cfg_key': same_attach_cfg_key}
+                tasks_group_by_driver.append(tmp)
+
+            # 指定了子下载任务的目录
+            distinct_child_dirs = list(set([t.download_dir for t in tasks if isinstance(t.download_dir, str)]))
+            if len(distinct_child_dirs) > 0:
+                for download_child_dir in distinct_child_dirs:
+                    sub_tasks = [t for t in tasks if t.download_dir == download_child_dir]
+                    author = f"{driver_info}_{datetime.datetime.now().strftime('%Y%m%d_%H')}"
+                    author = author.replace(":", "-")
+                    template = deepcopy(self.template)
+                    template['author'] = author
+                    template['targets'] = [t.task_content for t in sub_tasks]
+
                     if template['target_save_dir'].endswith(os.sep):
                         template['target_save_dir'] += (download_child_dir + os.sep)
                     else:
                         template['target_save_dir'] += (os.sep + download_child_dir + os.sep)
 
-            same_attach_cfg_key = tasks[0].attach_cfg_key
-            hashcode_text = ','.join(template['targets'])
-            hashcode = hashlib.md5(hashcode_text.encode('utf-8')).hexdigest()
-            cfg_path = f"{TEMPORARY_CONFIG_DIR}{os.sep}{hashcode}.yaml"
-            yaml_writer(cfg_path, template)
+                    same_attach_cfg_key = sub_tasks[0].attach_cfg_key
+                    hashcode_text = ','.join(template['targets'])
+                    hashcode = hashlib.md5(hashcode_text.encode('utf-8')).hexdigest()
+                    cfg_path = f"{TEMPORARY_CONFIG_DIR}{os.sep}{hashcode}.yaml"
+                    yaml_writer(cfg_path, template)
 
-            tmp = {'driver_info': driver_info, 'tasks': tasks, 'cfg_path': cfg_path,
-                   'attach_cfg_key': same_attach_cfg_key}
-            tasks_group_by_driver.append(tmp)
+                    tmp = {'driver_info': driver_info, 'tasks': sub_tasks, 'cfg_path': cfg_path,
+                           'attach_cfg_key': same_attach_cfg_key}
+                    tasks_group_by_driver.append(tmp)
 
         logger.info(f"Current size before -> {self.queue.qsize()}")
         logger.info("Putting not done tasks into queue")
