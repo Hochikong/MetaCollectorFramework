@@ -1,6 +1,6 @@
 # SQLALCHEMY_DATABASE_URI = "sqlite:///self_storage.sqlite"
 SQLALCHEMY_DATABASE_URI = "mysql+pymysql://collector:collrest@localhost:3306/collector_rest?charset=utf8mb4"
-SQLALCHEMY_ECHO = True
+SQLALCHEMY_ECHO = False
 # Absolute Paths
 MCF_CONFIG = "TEMP_CONFIG_STORAGE\\MCF_CONFIG_TEMP.yaml"
 TASK_TEMPLATE_CONFIG = "F:\\mcf_xxx.yml"

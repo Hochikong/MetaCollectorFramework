@@ -4,6 +4,7 @@
 # @FileName: tasks_controller.py
 
 import uuid
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
@@ -17,6 +18,7 @@ from ..services.main_mcf_holder import MainMCF
 
 router = APIRouter()
 
+logger = logging.getLogger('main_app')
 
 def get_db():
     db = SessionLocal()
@@ -33,6 +35,7 @@ drivers_router.prepare(None, {})
 @router.post("/tasks/single/", tags=['tasks'])
 def receive_task(task: SingleTaskReceive, db: Session = Depends(get_db)):
     total_status = False
+    logger.info(f"Received task: {task.url}")
     driver_info = drivers_router.get_router_output(task.url)
     for info in driver_info:
         created_task = TaskRowCreate(task_uid=str(uuid.uuid4()), task_content=task.url, task_status=3,
