@@ -21,3 +21,5 @@ Pillow~=8.4.0
 bs4~=0.0.1
 tqdm~=4.59.0
 selenium==4.10.0
+pymongo
+polars
