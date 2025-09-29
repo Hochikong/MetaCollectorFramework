@@ -49,12 +49,16 @@ class DJSScannerV2(object):
             if main_data['uploaded'] is None:
                 main_data['uploaded'] = ''
 
-            files = [f for f in os.listdir(main_data['path']) if 'metadata' not in f and 'Thumbs' not in f]
+            files = [f for f in os.listdir(main_data['path']) if 'metadata' not in f and 'Thumbs' not in f and 'enhanced' not in f]
             sort_files = sorted(files, key=lambda x: int(os.path.splitext(x)[0]))
-            with open(f"{p}{os.sep}{sort_files[0]}", 'rb') as f1:
-                main_data['preview'] = f1.read()
-            with open(f"{p}{os.sep}{list_median(sort_files)}", 'rb') as f2:
-                main_data['secondary_preview'] = f2.read()
+            if len(sort_files) == 0:
+                main_data['preview'] = None
+                main_data['secondary_preview'] = None
+            else:
+                with open(f"{p}{os.sep}{sort_files[0]}", 'rb') as f1:
+                    main_data['preview'] = f1.read()
+                with open(f"{p}{os.sep}{list_median(sort_files)}", 'rb') as f2:
+                    main_data['secondary_preview'] = f2.read()
 
             main_d.append(main_data)
 

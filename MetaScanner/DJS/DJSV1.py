@@ -36,7 +36,10 @@ class DJSScannerV1(object):
             p = meta_files[ind][:meta_files[ind].find('metadata')]
             print(f"Scanning path: {p}")
             # 旧版没有保存gallery id，从url提取
-            GID = "#" + re.search(r'/g/\d+', d['URL']).group().replace("/g/", "")
+            try:
+                GID = "#" + re.search(r'/g/\d+', d['URL']).group().replace("/g/", "")
+            except AttributeError:
+                GID = "000001"
             main_data = {
                 'url': d['URL'],
                 'index_title': 'MISSING NEED FIX' if isinstance(d['Index Title:'], list) else d['Index Title:'],
@@ -49,7 +52,7 @@ class DJSScannerV1(object):
                 'meta_version': 'djsV1'
             }
 
-            files = [f for f in os.listdir(main_data['path']) if 'metadata' not in f and 'Thumbs' not in f]
+            files = [f for f in os.listdir(main_data['path']) if 'metadata' not in f and 'Thumbs' not in f and 'enhanced' not in f]
             sort_files = sorted(files, key=lambda x: int(os.path.splitext(x)[0]))
             with open(f"{p}{os.sep}{sort_files[0]}", 'rb') as f1:
                 main_data['preview'] = f1.read()
