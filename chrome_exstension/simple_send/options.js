@@ -16,7 +16,7 @@ const restoreOptions = async () => {
     document.getElementById('server').value = syncItems.server ?? 'localhost';
     document.getElementById('port').value = syncItems.port ?? '3000';
     document.getElementById('secure').checked = syncItems.secure;
-    document.getElementById('endpoint').value = syncItems.endpoint ?? '/tasks/single/';
+    document.getElementById('endpoint').value = syncItems.endpoint ?? '/mcf/v2/tasks/single/';
 };
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
