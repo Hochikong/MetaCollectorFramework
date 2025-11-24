@@ -7,7 +7,7 @@ import pickle
 
 from MetaScanner.DJS.DJSV1 import DJSScannerV1
 from MetaScanner.DJS.DJSV2 import DJSScannerV2
-from MetaScanner.DJS.utils import SQLiteMetadataRepoUtil
+from MetaScanner.DJS.utils import SQLiteMetadataRepoUtil, djs_books_sqlite_to_parquet
 
 
 def scan_cli_launch():
@@ -87,6 +87,20 @@ def init_new_metadata_db():
     ru = SQLiteMetadataRepoUtil(args.path)
     ru.init_new_db()
     print(f"sqlite:///{args.path}")
+
+
+def sqlite2parquet():
+    parser = argparse.ArgumentParser("SQLite to parquet file")
+    parser.add_argument('-p', '--path',
+                        type=str, help="目标路径", metavar="/PATH/DJS.db", required=True)
+    parser.add_argument('-t', '--table',
+                        type=str, help="表名", metavar="TABLE_NAME", required=True)
+    parser.add_argument('-o', '--output',
+                        type=str, help="输出路径", metavar="/PATH/xxx.parquet")
+
+    args = parser.parse_args()
+    out = djs_books_sqlite_to_parquet(args.path, args.table, args.output)
+    print(f"parquet file saved to {out}")
 
 # Usage
 # 导入数据
