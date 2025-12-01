@@ -110,3 +110,6 @@ def sqlite2parquet():
 
 # 新数据库
 # new_djs_db -p G:\\TMP\\DJS.db
+
+# 生成精简parquet
+# db2pq -p djsDB_forRolling_tmp.sqlite -t djs_books -o djs_db.pkl
